@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notice - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .priority-bar {
+            padding: 15px 25px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .priority-bar.urgent { background: linear-gradient(135deg, #ff6348, #ff4757); }
+        .priority-bar.important { background: linear-gradient(135deg, #ffc107, #ff9f43); }
+        .priority-bar.normal { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .card-body { padding: 30px; }
+        .title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+        .content { font-size: 1.1rem; line-height: 1.8; opacity: 0.9; margin-bottom: 25px; }
+        .meta {
+            display: flex; flex-wrap: wrap; gap: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 0.95rem;
+            opacity: 0.7;
+        }
+        .meta-item { display: flex; align-items: center; gap: 8px; }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><i class="fas fa-graduation-cap"></i></div>
+            <h2>SINCET Digital Notice Board</h2>
+        </div>
+        
+        <div class="card">
+            <div class="priority-bar {{ notice.priority }}">
+                <i class="fas fa-{% if notice.priority == 'urgent' %}exclamation-circle{% elif notice.priority == 'important' %}star{% else %}info-circle{% endif %}"></i>
+                {{ notice.priority|upper }} NOTICE
+            </div>
+            <div class="card-body">
+                <h1 class="title">{{ notice.title }}</h1>
+                <div class="content">{{ notice.content }}</div>
+                <div class="meta">
+                    <div class="meta-item">
+                        <i class="fas fa-calendar"></i>
+                        {{ notice.created_at.strftime('%d %B %Y') }}
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-eye"></i>
+                        {{ notice.views }} views
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Display Settings - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 30px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 25px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .page-title { font-size: 2rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .page-title i { color: #667eea; }
+        .page-subtitle { color: rgba(255,255,255,0.5); margin-bottom: 30px; }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(56,239,125,0.2); border: 1px solid rgba(56,239,125,0.3); color: #38ef7d; }
+        .alert-danger { background: rgba(255,99,72,0.2); border: 1px solid rgba(255,99,72,0.3); color: #ff6348; }
+        .alert-info { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); color: #667eea; }
+        
+        .settings-grid { display: grid; gap: 25px; }
+        
+        .settings-card { background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .card-header { padding: 25px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 15px; }
+        .card-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .card-icon.timing { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .card-icon.display { background: linear-gradient(135deg, #38ef7d, #11998e); }
+        .card-icon.working { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .card-title { font-size: 1.2rem; font-weight: 600; }
+        .card-subtitle { font-size: 0.9rem; color: rgba(255,255,255,0.5); }
+        .card-body { padding: 30px; }
+        
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-bottom: 25px; }
+        .form-group { }
+        .form-label { display: block; margin-bottom: 10px; font-weight: 500; color: rgba(255,255,255,0.8); }
+        .form-label small { font-weight: 400; color: rgba(255,255,255,0.4); }
+        
+        .form-control { width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; transition: all 0.3s; }
+        .form-control:focus { outline: none; border-color: #667eea; background: rgba(255,255,255,0.08); }
+        
+        .input-with-unit { position: relative; }
+        .input-with-unit input { padding-right: 80px; }
+        .input-unit { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.4); font-size: 0.9rem; }
+        
+        .range-input { display: flex; align-items: center; gap: 15px; }
+        .range-slider { flex: 1; -webkit-appearance: none; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.1); outline: none; }
+        .range-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); cursor: pointer; }
+        .range-value { min-width: 60px; text-align: center; padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; font-weight: 600; color: #667eea; }
+        
+        .toggle-switch { display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: rgba(255,255,255,0.03); border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+        .toggle-switch:hover { background: rgba(255,255,255,0.06); }
+        .toggle-switch input { display: none; }
+        .toggle-track { width: 50px; height: 26px; background: rgba(255,255,255,0.1); border-radius: 13px; position: relative; transition: all 0.3s; }
+        .toggle-switch input:checked + .toggle-track { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .toggle-track::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.3s; }
+        .toggle-switch input:checked + .toggle-track::after { left: 26px; }
+        .toggle-label { flex: 1; }
+        .toggle-label .title { font-weight: 500; }
+        .toggle-label .desc { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+        
+        .btn { padding: 15px 30px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; width: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
+        
+        .preview-section { margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .preview-title { font-size: 1rem; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        .preview-title i { color: #667eea; }
+        
+        .preview-timeline { display: flex; align-items: center; gap: 5px; padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; overflow-x: auto; }
+        .timeline-item { padding: 12px 20px; border-radius: 8px; text-align: center; min-width: 100px; }
+        .timeline-item.text { background: rgba(102, 126, 234, 0.2); color: #667eea; }
+        .timeline-item.photo { background: rgba(56, 239, 125, 0.2); color: #38ef7d; }
+        .timeline-item.video { background: rgba(240, 147, 251, 0.2); color: #f093fb; }
+        .timeline-item .duration { font-size: 0.8rem; opacity: 0.7; margin-top: 3px; }
+        .timeline-arrow { color: rgba(255,255,255,0.3); }
+        
+        .dept-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border-radius: 20px; font-weight: 500; }
+        .dept-badge i { color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        
+        <h1 class="page-title"><i class="fas fa-cog"></i> TV Display Settings</h1>
+        <p class="page-subtitle">Configure display timings and preferences for your department's TV display</p>
+        
+        <div class="dept-badge" style="margin-bottom: 25px;">
+            <i class="fas fa-building"></i>
+            {{ session.get('department', 'Your Department') }}
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="/settings/tv">
+            <div class="settings-grid">
+                <!-- Display Timing Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon timing"><i class="fas fa-clock"></i></div>
+                        <div>
+                            <div class="card-title">Display Timings</div>
+                            <div class="card-subtitle">Set how long each content type displays</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Text Notice Duration <small>(scrolling time)</small></label>
+                                <div class="range-input">
+                                    <input type="range" name="text_duration" class="range-slider" min="2" max="15" value="{{ settings.text_duration if settings else 4 }}" oninput="updateRangeValue(this, 'textValue')">
+                                    <span class="range-value" id="textValue">{{ settings.text_duration if settings else 4 }}s</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Photo Slide Duration <small>(each photo)</small></label>
+                                <div class="range-input">
+                                    <input type="range" name="photo_duration" class="range-slider" min="3" max="30" value="{{ settings.photo_duration if settings else 5 }}" oninput="updateRangeValue(this, 'photoValue')">
+                                    <span class="range-value" id="photoValue">{{ settings.photo_duration if settings else 5 }}s</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Video Display Duration <small>(max playback)</small></label>
+                                <div class="range-input">
+                                    <input type="range" name="video_duration" class="range-slider" min="10" max="120" step="5" value="{{ settings.video_duration if settings else 30 }}" oninput="updateRangeValue(this, 'videoValue')">
+                                    <span class="range-value" id="videoValue">{{ settings.video_duration if settings else 30 }}s</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Ad Video Duration <small>(background ads)</small></label>
+                                <div class="range-input">
+                                    <input type="range" name="ad_duration" class="range-slider" min="5" max="60" step="5" value="{{ settings.ad_duration if settings else 15 }}" oninput="updateRangeValue(this, 'adValue')">
+                                    <span class="range-value" id="adValue">{{ settings.ad_duration if settings else 15 }}s</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Timeline -->
+                        <div class="preview-section">
+                            <div class="preview-title"><i class="fas fa-play-circle"></i> Content Rotation Preview</div>
+                            <div class="preview-timeline">
+                                <div class="timeline-item text">
+                                    <i class="fas fa-font"></i> Text
+                                    <div class="duration" id="previewText">4s</div>
+                                </div>
+                                <i class="fas fa-arrow-right timeline-arrow"></i>
+                                <div class="timeline-item photo">
+                                    <i class="fas fa-images"></i> Photos
+                                    <div class="duration" id="previewPhoto">5s each</div>
+                                </div>
+                                <i class="fas fa-arrow-right timeline-arrow"></i>
+                                <div class="timeline-item video">
+                                    <i class="fas fa-video"></i> Video
+                                    <div class="duration" id="previewVideo">30s</div>
+                                </div>
+                                <i class="fas fa-redo timeline-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Working Days Settings -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon working"><i class="fas fa-calendar-week"></i></div>
+                        <div>
+                            <div class="card-title">Attendance Settings</div>
+                            <div class="card-subtitle">Configure total working days for percentage calculation</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Total Working Days <small>(per semester)</small></label>
+                                <div class="input-with-unit">
+                                    <input type="number" name="total_working_days" class="form-control" value="{{ settings.total_working_days if settings else 90 }}" min="1" max="200">
+                                    <span class="input-unit">days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Display Options -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <div class="card-icon display"><i class="fas fa-desktop"></i></div>
+                        <div>
+                            <div class="card-title">Display Options</div>
+                            <div class="card-subtitle">Toggle display features on/off</div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <label class="toggle-switch">
+                            <input type="checkbox" name="show_notices" {% if not settings or settings.show_notices != False %}checked{% endif %}>
+                            <div class="toggle-track"></div>
+                            <div class="toggle-label">
+                                <div class="title">Show Notices</div>
+                                <div class="desc">Display text notices with scrolling animation</div>
+                            </div>
+                        </label>
+                        
+                        <label class="toggle-switch" style="margin-top: 15px;">
+                            <input type="checkbox" name="show_photos" {% if not settings or settings.show_photos != False %}checked{% endif %}>
+                            <div class="toggle-track"></div>
+                            <div class="toggle-label">
+                                <div class="title">Show Photo Slideshow</div>
+                                <div class="desc">Display uploaded images in a slideshow</div>
+                            </div>
+                        </label>
+                        
+                        <label class="toggle-switch" style="margin-top: 15px;">
+                            <input type="checkbox" name="show_videos" {% if not settings or settings.show_videos != False %}checked{% endif %}>
+                            <div class="toggle-track"></div>
+                            <div class="toggle-label">
+                                <div class="title">Show Videos</div>
+                                <div class="desc">Play uploaded videos on the display</div>
+                            </div>
+                        </label>
+                        
+                        <label class="toggle-switch" style="margin-top: 15px;">
+                            <input type="checkbox" name="show_ads" {% if not settings or settings.show_ads != False %}checked{% endif %}>
+                            <div class="toggle-track"></div>
+                            <div class="toggle-label">
+                                <div class="title">Show College Ads</div>
+                                <div class="desc">Display college advertisement videos</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        function updateRangeValue(input, valueId) {
+            document.getElementById(valueId).textContent = input.value + 's';
+            updatePreview();
+        }
+        
+        function updatePreview() {
+            const textDuration = document.querySelector('input[name="text_duration"]').value;
+            const photoDuration = document.querySelector('input[name="photo_duration"]').value;
+            const videoDuration = document.querySelector('input[name="video_duration"]').value;
+            
+            document.getElementById('previewText').textContent = textDuration + 's';
+            document.getElementById('previewPhoto').textContent = photoDuration + 's each';
+            document.getElementById('previewVideo').textContent = videoDuration + 's';
+        }
+    </script>
+</body>
+</html>

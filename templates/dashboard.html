@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); padding: 20px; z-index: 1000; overflow-y: auto; }
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
+        .sidebar-logo { width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .sidebar-logo i { font-size: 24px; color: white; }
+        .sidebar-title { font-size: 1.2rem; font-weight: 600; }
+        .sidebar-subtitle { font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 10px; transition: all 0.3s ease; }
+        .nav-link:hover, .nav-link.active { background: rgba(102, 126, 234, 0.2); color: white; }
+        .nav-link.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)); }
+        .nav-link i { width: 20px; text-align: center; }
+        .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+        
+        .nav-section-title { font-size: 0.75rem; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 10px; padding-left: 15px; letter-spacing: 1px; }
+        .dept-nav { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px; margin-bottom: 15px; }
+        .dept-link { display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: rgba(255,255,255,0.6); text-decoration: none; border-radius: 8px; font-size: 0.9rem; transition: all 0.3s; }
+        .dept-link:hover { background: rgba(102, 126, 234, 0.15); color: white; }
+        .dept-link.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .dept-link i { font-size: 0.8rem; }
+        
+        .main-content { margin-left: 260px; padding: 30px; min-height: 100vh; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 15px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 1.8rem; font-weight: 600; }
+        .page-subtitle { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-top: 5px; }
+        
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .logout-btn { padding: 10px 20px; background: rgba(255, 99, 72, 0.2); border: 1px solid rgba(255, 99, 72, 0.3); border-radius: 10px; color: #ff6348; text-decoration: none; transition: all 0.3s ease; }
+        .logout-btn:hover { background: rgba(255, 99, 72, 0.3); }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 25px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.08); }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 15px; }
+        .stat-icon.notices { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.events { background: linear-gradient(135deg, #f093fb, #f5576c); }
+        .stat-icon.attendance { background: linear-gradient(135deg, #38ef7d, #11998e); }
+        .stat-icon.results { background: linear-gradient(135deg, #ffecd2, #fcb69f); color: #333; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
+        .stat-label { color: rgba(255,255,255,0.5); font-size: 0.95rem; }
+        
+        .content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        @media (max-width: 1200px) { .content-grid { grid-template-columns: 1fr; } }
+        
+        .card { background: rgba(255,255,255,0.05); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .card-title { font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .card-title i { color: #667eea; }
+        .card-action { padding: 8px 16px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; color: white; text-decoration: none; font-size: 0.9rem; transition: all 0.3s ease; }
+        .card-action:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        .card-body { padding: 20px 25px; }
+        
+        .attendance-tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.3s ease; }
+        .tab-btn:hover, .tab-btn.active { background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-color: transparent; }
+        
+        .chart-container { height: 300px; position: relative; }
+        
+        .notice-list { max-height: 400px; overflow-y: auto; }
+        .notice-item { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.3s; }
+        .notice-item:hover { background: rgba(255,255,255,0.03); }
+        .notice-item:last-child { border-bottom: none; }
+        .notice-title-text { font-weight: 500; margin-bottom: 5px; }
+        .notice-meta { font-size: 0.85rem; color: rgba(255,255,255,0.5); display: flex; gap: 15px; flex-wrap: wrap; }
+        .priority-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .priority-badge.urgent { background: rgba(255, 99, 72, 0.2); color: #ff6348; }
+        .priority-badge.important { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .priority-badge.normal { background: rgba(102, 126, 234, 0.2); color: #667eea; }
+        
+        .quick-actions { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .quick-action { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; text-decoration: none; color: white; transition: all 0.3s; }
+        .quick-action:hover { background: rgba(102, 126, 234, 0.2); transform: translateY(-3px); }
+        .quick-action i { font-size: 2rem; margin-bottom: 10px; color: #667eea; }
+        .quick-action span { font-size: 0.9rem; opacity: 0.8; text-align: center; }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(56,239,125,0.2); border: 1px solid rgba(56,239,125,0.3); color: #38ef7d; }
+        .alert-info { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); color: #667eea; }
+        .alert-warning { background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.3); color: #ffc107; }
+        
+        .viewing-dept { background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border: 1px solid rgba(102, 126, 234, 0.3); border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .viewing-dept i { color: #667eea; }
+        
+        .principal-badge { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-left: 10px; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
+            <div>
+                <div class="sidebar-title">SINCET</div>
+                <div class="sidebar-subtitle">Digital Notice Board</div>
+            </div>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/dashboard" class="nav-link active"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="/notices" class="nav-link"><i class="fas fa-bullhorn"></i> Notices</a></li>
+            <li class="nav-item"><a href="/events" class="nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li class="nav-item"><a href="/students" class="nav-link"><i class="fas fa-users"></i> Students</a></li>
+            <li class="nav-item"><a href="/attendance" class="nav-link"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+            <li class="nav-item"><a href="/results" class="nav-link"><i class="fas fa-trophy"></i> Results</a></li>
+            <li class="nav-item"><a href="/media/upload" class="nav-link"><i class="fas fa-photo-video"></i> Media</a></li>
+            {% if session.get('role') == 'hod' or session.get('role') == 'principal' %}
+            <li class="nav-item"><a href="/settings/tv" class="nav-link"><i class="fas fa-cog"></i> TV Settings</a></li>
+            {% endif %}
+        </ul>
+        
+        {% if session.get('role') == 'principal' %}
+        <div class="nav-divider"></div>
+        <div class="nav-section-title"><i class="fas fa-building"></i> All Departments</div>
+        <div class="dept-nav">
+            <a href="/dashboard?dept=all" class="dept-link {% if selected_dept == 'all' or not selected_dept %}active{% endif %}">
+                <i class="fas fa-globe"></i> All Departments
+            </a>
+            <a href="/dashboard?dept=CSE" class="dept-link {% if selected_dept == 'CSE' %}active{% endif %}">
+                <i class="fas fa-laptop-code"></i> CSE
+            </a>
+            <a href="/dashboard?dept=ECE" class="dept-link {% if selected_dept == 'ECE' %}active{% endif %}">
+                <i class="fas fa-microchip"></i> ECE
+            </a>
+            <a href="/dashboard?dept=EEE" class="dept-link {% if selected_dept == 'EEE' %}active{% endif %}">
+                <i class="fas fa-bolt"></i> EEE
+            </a>
+            <a href="/dashboard?dept=MECH" class="dept-link {% if selected_dept == 'MECH' %}active{% endif %}">
+                <i class="fas fa-cogs"></i> MECH
+            </a>
+            <a href="/dashboard?dept=CIVIL" class="dept-link {% if selected_dept == 'CIVIL' %}active{% endif %}">
+                <i class="fas fa-building"></i> CIVIL
+            </a>
+            <a href="/dashboard?dept=IT" class="dept-link {% if selected_dept == 'IT' %}active{% endif %}">
+                <i class="fas fa-network-wired"></i> IT
+            </a>
+            <a href="/dashboard?dept=AIDS" class="dept-link {% if selected_dept == 'AIDS' %}active{% endif %}">
+                <i class="fas fa-brain"></i> AIDS
+            </a>
+            <a href="/dashboard?dept=AIML" class="dept-link {% if selected_dept == 'AIML' %}active{% endif %}">
+                <i class="fas fa-robot"></i> AIML
+            </a>
+        </div>
+        {% endif %}
+        
+        <div class="nav-divider"></div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/tv" class="nav-link" target="_blank"><i class="fas fa-tv"></i> TV Display</a></li>
+            <li class="nav-item"><a href="/viewer" class="nav-link"><i class="fas fa-eye"></i> Public View</a></li>
+        </ul>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        
+        {% if session.get('role') == 'principal' and selected_dept and selected_dept != 'all' %}
+        <div class="viewing-dept">
+            <i class="fas fa-filter"></i>
+            <span>Viewing Department: <strong>{{ selected_dept }}</strong></span>
+            <a href="/dashboard?dept=all" style="margin-left: auto; color: #667eea; text-decoration: none;">
+                <i class="fas fa-times"></i> Clear Filter
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div>
+                <h1 class="page-title">
+                    Dashboard
+                    {% if session.get('role') == 'principal' %}
+                    <span class="principal-badge"><i class="fas fa-crown"></i> Principal</span>
+                    {% endif %}
+                </h1>
+                <p class="page-subtitle">Welcome back, {{ session.get('name', 'User') }}! | Department: {{ session.get('department', 'All') }}</p>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
+                <div>
+                    <div style="font-weight: 500;">{{ session.get('name', 'User') }}</div>
+                    <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">{{ session.get('role', 'User')|capitalize }}</div>
+                </div>
+                <a href="/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon notices"><i class="fas fa-bullhorn"></i></div>
+                <div class="stat-value">{{ notices|length if notices else 0 }}</div>
+                <div class="stat-label">Active Notices</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon events"><i class="fas fa-calendar-alt"></i></div>
+                <div class="stat-value">{{ events|length if events else 0 }}</div>
+                <div class="stat-label">Upcoming Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon attendance"><i class="fas fa-users"></i></div>
+                <div class="stat-value">{{ total_students if total_students else 0 }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon results"><i class="fas fa-trophy"></i></div>
+                <div class="stat-value">{{ results|length if results else 0 }}</div>
+                <div class="stat-label">Results Published</div>
+            </div>
+        </div>
+        
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <div>
+                <!-- Attendance Chart -->
+                <div class="card" style="margin-bottom: 25px;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> Attendance Overview</h3>
+                        <a href="/attendance/view" class="card-action">View Details</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="attendance-tabs">
+                            <button class="tab-btn active" data-year="1st Year">1st Year</button>
+                            <button class="tab-btn" data-year="2nd Year">2nd Year</button>
+                            <button class="tab-btn" data-year="3rd Year">3rd Year</button>
+                            <button class="tab-btn" data-year="4th Year">4th Year</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Notices -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-bullhorn"></i> Recent Notices</h3>
+                        <a href="/notice/add" class="card-action"><i class="fas fa-plus"></i> Add Notice</a>
+                    </div>
+                    <div class="card-body notice-list">
+                        {% if notices %}
+                        {% for notice in notices[:5] %}
+                        <div class="notice-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 10px;">
+                                <div class="notice-title-text">{{ notice.title }}</div>
+                                <span class="priority-badge {{ notice.priority }}">{{ notice.priority|capitalize }}</span>
+                            </div>
+                            <div class="notice-meta">
+                                <span><i class="fas fa-clock"></i> {{ notice.created_at.strftime('%d %b %Y') }}</span>
+                                <span><i class="fas fa-eye"></i> {{ notice.views }} views</span>
+                                {% if notice.department %}<span><i class="fas fa-building"></i> {{ notice.department }}</span>{% endif %}
+                                {% if notice.for_all_departments %}<span style="color: #38ef7d;"><i class="fas fa-globe"></i> All Depts</span>{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p style="text-align: center; opacity: 0.5; padding: 30px;">No notices yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <!-- Quick Actions -->
+                <div class="card" style="margin-bottom: 25px;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-actions">
+                            <a href="/notice/add" class="quick-action"><i class="fas fa-bullhorn"></i><span>Add Notice</span></a>
+                            <a href="/event/add" class="quick-action"><i class="fas fa-calendar-plus"></i><span>Add Event</span></a>
+                            <a href="/attendance/mark" class="quick-action"><i class="fas fa-clipboard-check"></i><span>Mark Attendance</span></a>
+                            <a href="/student/add" class="quick-action"><i class="fas fa-user-plus"></i><span>Add Student</span></a>
+                            <a href="/student/bulk-add" class="quick-action"><i class="fas fa-file-excel"></i><span>Bulk Import</span></a>
+                            <a href="/media/upload" class="quick-action"><i class="fas fa-upload"></i><span>Upload Media</span></a>
+                            <a href="/attendance/export" class="quick-action"><i class="fas fa-download"></i><span>Export Data</span></a>
+                            <a href="/tv" class="quick-action" target="_blank"><i class="fas fa-tv"></i><span>TV Display</span></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upcoming Events -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Events</h3>
+                        <a href="/events" class="card-action">View All</a>
+                    </div>
+                    <div class="card-body notice-list">
+                        {% if events %}
+                        {% for event in events[:4] %}
+                        <div class="notice-item">
+                            <div class="notice-title-text">{{ event.title }}</div>
+                            <div class="notice-meta">
+                                <span><i class="fas fa-calendar"></i> {{ event.event_date.strftime('%d %b %Y') }}</span>
+                                {% if event.venue %}<span><i class="fas fa-map-marker-alt"></i> {{ event.venue }}</span>{% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <p style="text-align: center; opacity: 0.5; padding: 30px;">No upcoming events</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script>
+        // Attendance data from server
+        const attendanceData = {{ attendance_data|tojson|safe if attendance_data else '{}' }};
+        let chart;
+        
+        function updateChart(year) {
+            const data = attendanceData[year] || {present: 0, absent: 0};
+            const total = data.present + data.absent;
+            const percentage = total > 0 ? ((data.present / total) * 100).toFixed(1) : 0;
+            
+            if (chart) chart.destroy();
+            
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Present (' + data.present + ')', 'Absent (' + data.absent + ')'],
+                    datasets: [{
+                        data: [data.present || 0, data.absent || 0],
+                        backgroundColor: ['rgba(56, 239, 125, 0.8)', 'rgba(255, 99, 72, 0.8)'],
+                        borderColor: ['#38ef7d', '#ff6348'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { color: 'white', padding: 20 } 
+                        },
+                        title: {
+                            display: true,
+                            text: 'Attendance: ' + percentage + '%',
+                            color: 'white',
+                            font: { size: 16 }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                updateChart(this.dataset.year);
+            });
+        });
+        
+        // Initialize with first year
+        updateChart('1st Year');
+    </script>
+</body>
+</html>

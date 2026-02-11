@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Media - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 25px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2rem; font-weight: 600; display: flex; align-items: center; gap: 15px; }
+        .page-title i { color: #f093fb; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab { padding: 12px 25px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: rgba(255,255,255,0.7); cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+        .tab:hover, .tab.active { background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)); color: white; border-color: transparent; }
+        .tab.active { box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3); }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(56,239,125,0.2); border: 1px solid rgba(56,239,125,0.3); color: #38ef7d; }
+        .alert-danger { background: rgba(255,99,72,0.2); border: 1px solid rgba(255,99,72,0.3); color: #ff6348; }
+        
+        .content-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+        @media (max-width: 900px) { .content-grid { grid-template-columns: 1fr; } }
+        
+        .upload-card { background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); padding: 30px; }
+        .upload-card h3 { margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .upload-card h3 i { color: #667eea; }
+        
+        .upload-zone { border: 2px dashed rgba(255,255,255,0.2); border-radius: 15px; padding: 40px 20px; text-align: center; transition: all 0.3s; cursor: pointer; margin-bottom: 20px; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: #667eea; background: rgba(102, 126, 234, 0.1); }
+        .upload-zone i { font-size: 3rem; color: #667eea; margin-bottom: 15px; }
+        .upload-zone h4 { margin-bottom: 10px; }
+        .upload-zone p { color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+        
+        .file-input { display: none; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-select { width: 100%; padding: 12px 15px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 1rem; }
+        .form-select:focus { outline: none; border-color: #667eea; }
+        .form-select option { background: #1a1a2e; }
+        
+        .btn { padding: 12px 24px; border-radius: 10px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; border: none; display: inline-flex; align-items: center; gap: 8px; width: 100%; justify-content: center; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .selected-files { margin-bottom: 20px; }
+        .selected-file { display: flex; align-items: center; gap: 12px; padding: 12px 15px; background: rgba(56, 239, 125, 0.1); border: 1px solid rgba(56, 239, 125, 0.2); border-radius: 10px; margin-bottom: 10px; }
+        .selected-file i { color: #38ef7d; }
+        .selected-file .name { flex: 1; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .selected-file .size { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+        .selected-file .remove { background: none; border: none; color: #ff6348; cursor: pointer; padding: 5px; }
+        
+        .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        
+        .media-card { background: rgba(255,255,255,0.05); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); transition: all 0.3s; }
+        .media-card:hover { transform: translateY(-5px); border-color: rgba(102, 126, 234, 0.3); }
+        .media-preview { width: 100%; height: 150px; object-fit: cover; background: #1a1a2e; display: flex; align-items: center; justify-content: center; }
+        .media-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .media-preview video { width: 100%; height: 100%; object-fit: cover; }
+        .media-preview.placeholder { font-size: 3rem; color: rgba(255,255,255,0.2); }
+        .media-info { padding: 15px; }
+        .media-name { font-weight: 500; font-size: 0.9rem; margin-bottom: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .media-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: rgba(255,255,255,0.5); }
+        .media-type { padding: 3px 8px; border-radius: 5px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .media-type.image { background: rgba(56, 239, 125, 0.2); color: #38ef7d; }
+        .media-type.video { background: rgba(240, 147, 251, 0.2); color: #f093fb; }
+        .media-actions { display: flex; gap: 5px; margin-top: 10px; }
+        .media-action { flex: 1; padding: 8px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.85rem; transition: all 0.3s; }
+        .media-action.view { background: rgba(102, 126, 234, 0.2); color: #667eea; }
+        .media-action.delete { background: rgba(255, 99, 72, 0.2); color: #ff6348; }
+        .media-action:hover { transform: scale(1.05); }
+        
+        .empty-state { text-align: center; padding: 60px 30px; color: rgba(255,255,255,0.5); grid-column: 1 / -1; }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
+        
+        .supported-formats { background: rgba(102, 126, 234, 0.1); border-radius: 10px; padding: 15px; margin-top: 20px; }
+        .supported-formats h5 { color: #667eea; margin-bottom: 10px; font-size: 0.9rem; }
+        .supported-formats p { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-photo-video"></i> Media Manager</h1>
+        </div>
+        
+        <div class="tabs">
+            <a href="?type=images" class="tab {% if media_type != 'videos' %}active{% endif %}"><i class="fas fa-images"></i> Images</a>
+            <a href="?type=videos" class="tab {% if media_type == 'videos' %}active{% endif %}"><i class="fas fa-video"></i> Videos</a>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <div class="content-grid">
+            <!-- Upload Section -->
+            <div class="upload-card">
+                <h3><i class="fas fa-cloud-upload-alt"></i> Upload Media</h3>
+                
+                <form method="POST" action="/media/upload" enctype="multipart/form-data" id="uploadForm">
+                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Drop files here</h4>
+                        <p>or click to browse</p>
+                    </div>
+                    
+                    <input type="file" name="files" id="fileInput" class="file-input" multiple accept="image/*,video/*">
+                    
+                    <div class="selected-files" id="selectedFiles"></div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Content Type</label>
+                        <select name="content_type" class="form-select">
+                            <option value="image">Images (Slideshow)</option>
+                            <option value="video">Videos</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Display Duration (seconds)</label>
+                        <input type="number" name="display_duration" class="form-select" value="10" min="3" max="120" 
+                               placeholder="How long to show on TV" style="padding: 12px 15px;">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                        <i class="fas fa-upload"></i> Upload Media
+                    </button>
+                </form>
+                
+                <div class="supported-formats">
+                    <h5><i class="fas fa-info-circle"></i> Supported Formats</h5>
+                    <p><strong>Images:</strong> PNG, JPG, JPEG, GIF, WebP</p>
+                    <p><strong>Videos:</strong> MP4, WebM, OGG</p>
+                    <p><strong>Max Size:</strong> 100MB per file</p>
+                </div>
+            </div>
+            
+            <!-- Media Gallery -->
+            <div>
+                <h3 style="margin-bottom: 20px;"><i class="fas fa-th"></i> {{ 'Images' if media_type != 'videos' else 'Videos' }} Gallery</h3>
+                
+                <div class="media-grid">
+                    {% if media_files %}
+                    {% for media in media_files %}
+                    <div class="media-card" data-id="{{ media.id }}">
+                        <div class="media-preview">
+                            {% if media.content_type == 'image' %}
+                            <img src="{{ url_for('static', filename=media.file_path) }}" alt="{{ media.filename }}">
+                            {% else %}
+                            <video muted>
+                                <source src="{{ url_for('static', filename=media.file_path) }}" type="video/mp4">
+                            </video>
+                            {% endif %}
+                        </div>
+                        <div class="media-info">
+                            <div class="media-name">{{ media.filename }}</div>
+                            <div class="media-meta">
+                                <span class="media-type {{ media.content_type }}">{{ media.content_type }}</span>
+                                <span>{{ media.created_at.strftime('%d %b') }}</span>
+                            </div>
+                            <div class="media-actions">
+                                <button class="media-action view" onclick="viewMedia('{{ url_for('static', filename=media.file_path) }}', '{{ media.content_type }}')">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                                <button class="media-action delete" onclick="deleteMedia({{ media.id }})">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-photo-video"></i>
+                        <h3>No Media Uploaded</h3>
+                        <p>Upload images or videos to display on TV</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Media Preview Modal -->
+    <div id="mediaModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;">
+        <button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="modalContent" style="max-width: 90%; max-height: 90%;"></div>
+    </div>
+    
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFiles = document.getElementById('selectedFiles');
+        const uploadBtn = document.getElementById('uploadBtn');
+        let files = [];
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+        
+        function handleFiles(newFiles) {
+            files = Array.from(newFiles);
+            updateFileList();
+        }
+        
+        function updateFileList() {
+            selectedFiles.innerHTML = '';
+            files.forEach((file, index) => {
+                const div = document.createElement('div');
+                div.className = 'selected-file';
+                div.innerHTML = `
+                    <i class="fas fa-${file.type.startsWith('image') ? 'image' : 'video'}"></i>
+                    <span class="name">${file.name}</span>
+                    <span class="size">${formatSize(file.size)}</span>
+                    <button class="remove" onclick="removeFile(${index})"><i class="fas fa-times"></i></button>
+                `;
+                selectedFiles.appendChild(div);
+            });
+            uploadBtn.disabled = files.length === 0;
+        }
+        
+        function removeFile(index) {
+            files.splice(index, 1);
+            const dt = new DataTransfer();
+            files.forEach(f => dt.items.add(f));
+            fileInput.files = dt.files;
+            updateFileList();
+        }
+        
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+        
+        function viewMedia(url, type) {
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('modalContent');
+            
+            if (type === 'image') {
+                content.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 80vh; border-radius: 10px;">`;
+            } else {
+                content.innerHTML = `<video src="${url}" controls autoplay style="max-width: 100%; max-height: 80vh; border-radius: 10px;"></video>`;
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('mediaModal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = '';
+            modal.style.display = 'none';
+        }
+        
+        function deleteMedia(id) {
+            if (confirm('Are you sure you want to delete this media?')) {
+                fetch('/media/delete/' + id, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.querySelector(`[data-id="${id}"]`).remove();
+                        } else {
+                            alert('Error deleting media');
+                        }
+                    });
+            }
+        }
+        
+        document.getElementById('mediaModal').addEventListener('click', (e) => {
+            if (e.target.id === 'mediaModal') closeModal();
+        });
+    </script>
+</body>
+</html>

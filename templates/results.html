@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: linear-gradient(180deg, #1a1a2e, #16213e); padding: 20px; z-index: 1000; }
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
+        .sidebar-logo { width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 10px; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { background: rgba(102,126,234,0.2); color: white; }
+        .nav-link.active { background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.3)); }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-title { font-size: 1.8rem; }
+        .btn { padding: 12px 25px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #ffecd2, #fcb69f); color: #333; }
+        .btn:hover { transform: translateY(-2px); }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .result-card { background: rgba(255,255,255,0.05); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; transition: all 0.3s; }
+        .result-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.08); }
+        .result-header { padding: 20px; background: linear-gradient(135deg, rgba(255,236,210,0.2), rgba(252,182,159,0.2)); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .result-badges { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; background: rgba(255,255,255,0.15); }
+        .result-title { font-size: 1.2rem; font-weight: 600; }
+        .result-body { padding: 20px; }
+        .result-meta { font-size: 0.9rem; opacity: 0.7; margin-bottom: 15px; }
+        .result-actions { display: flex; gap: 10px; }
+        .btn-sm { padding: 8px 15px; font-size: 0.85rem; border-radius: 8px; }
+        .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .btn-danger { background: rgba(255,99,72,0.2); color: #ff6348; border: 1px solid rgba(255,99,72,0.3); }
+        .empty-state { text-align: center; padding: 60px; background: rgba(255,255,255,0.05); border-radius: 15px; }
+        .empty-state i { font-size: 4rem; opacity: 0.3; margin-bottom: 20px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 20px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
+            <div><div style="font-size: 1.2rem; font-weight: 600;">SINCET</div><div style="font-size: 0.8rem; opacity: 0.5;">Notice Board</div></div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="/notices" class="nav-link"><i class="fas fa-bullhorn"></i> Notices</a></li>
+            <li class="nav-item"><a href="/events" class="nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li class="nav-item"><a href="/attendance" class="nav-link"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+            <li class="nav-item"><a href="/results" class="nav-link active"><i class="fas fa-trophy"></i> Results</a></li>
+            <li class="nav-item"><a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-trophy"></i> Results</h1>
+            <a href="/result/add" class="btn btn-primary"><i class="fas fa-plus"></i> Add Result</a>
+        </div>
+
+        {% if results %}
+        <div class="results-grid">
+            {% for result in results %}
+            <div class="result-card">
+                <div class="result-header">
+                    <div class="result-badges">
+                        <span class="badge">{{ result.year }}</span>
+                        {% if result.semester %}<span class="badge">{{ result.semester }}</span>{% endif %}
+                    </div>
+                    <h3 class="result-title">{{ result.title }}</h3>
+                </div>
+                <div class="result-body">
+                    <div class="result-meta">
+                        <i class="fas fa-building"></i> {{ departments[result.department]['name'] if result.department in departments else result.department }}<br>
+                        <i class="fas fa-calendar"></i> {{ result.created_at.strftime('%d %b %Y') }}
+                    </div>
+                    <div class="result-actions">
+                        <a href="/result/{{ result.id }}" class="btn btn-sm btn-outline"><i class="fas fa-eye"></i> View</a>
+                        {% if result.file_path %}
+                        <a href="/static/{{ result.file_path }}" class="btn btn-sm btn-outline" target="_blank"><i class="fas fa-download"></i></a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-trophy"></i>
+            <h3>No Results Published</h3>
+            <p style="opacity: 0.6; margin-bottom: 20px;">Add your first result</p>
+            <a href="/result/add" class="btn btn-primary"><i class="fas fa-plus"></i> Add Result</a>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

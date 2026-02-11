@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .event-banner {
+            background: linear-gradient(135deg, rgba(240,147,251,0.3), rgba(245,87,108,0.3));
+            padding: 30px;
+            text-align: center;
+        }
+        .event-date-box {
+            display: inline-block;
+            background: white;
+            color: #1a1a2e;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .event-day { font-size: 2.5rem; font-weight: 700; }
+        .event-month { font-size: 1.1rem; text-transform: uppercase; }
+        .card-body { padding: 30px; }
+        .title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .info-item i { font-size: 1.3rem; color: #f093fb; width: 25px; }
+        .description { font-size: 1.1rem; line-height: 1.8; opacity: 0.9; margin-top: 20px; }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><i class="fas fa-calendar-alt"></i></div>
+            <h2>SINCET Event</h2>
+        </div>
+        
+        <div class="card">
+            <div class="event-banner">
+                <div class="event-date-box">
+                    <div class="event-day">{{ event.event_date.strftime('%d') }}</div>
+                    <div class="event-month">{{ event.event_date.strftime('%B %Y') }}</div>
+                </div>
+            </div>
+            <div class="card-body">
+                <h1 class="title">{{ event.title }}</h1>
+                
+                {% if event.event_time %}
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ event.event_time }}</span>
+                </div>
+                {% endif %}
+                
+                {% if event.venue %}
+                <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ event.venue }}</span>
+                </div>
+                {% endif %}
+                
+                {% if event.department %}
+                <div class="info-item">
+                    <i class="fas fa-building"></i>
+                    <span>{{ departments[event.department]['name'] if event.department in departments else event.department }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="description">{{ event.description }}</div>
+            </div>
+        </div>
+        
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</body>
+</html>

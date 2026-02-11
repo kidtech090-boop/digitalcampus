@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Database (auto-created on server)
+instance/
+*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Uploads (user-generated content - not tracked in git)
+static/uploads/notices/*
+static/uploads/events/*
+static/uploads/results/*
+static/uploads/media/images/*
+static/uploads/media/videos/*
+static/uploads/college_ads/*
+static/exports/attendance/*
+
+# Keep the upload directories (empty)
+!static/uploads/notices/.gitkeep
+!static/uploads/events/.gitkeep
+!static/uploads/results/.gitkeep
+!static/uploads/media/images/.gitkeep
+!static/uploads/media/videos/.gitkeep
+!static/uploads/college_ads/.gitkeep
+!static/exports/attendance/.gitkeep
+
+# Old project folder (backup reference only)
+ARAVIND PROJECT (1)/

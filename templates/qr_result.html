@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        .container { max-width: 700px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .logo {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .result-header {
+            background: linear-gradient(135deg, rgba(56,239,125,0.3), rgba(17,153,142,0.3));
+            padding: 25px;
+            text-align: center;
+        }
+        .badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            margin: 5px;
+            font-size: 0.9rem;
+        }
+        .card-body { padding: 30px; }
+        .title { font-size: 1.8rem; font-weight: 700; margin-bottom: 20px; }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .info-item {
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .info-label { font-size: 0.85rem; opacity: 0.7; margin-bottom: 5px; }
+        .info-value { font-size: 1.1rem; font-weight: 600; }
+        .description { line-height: 1.8; opacity: 0.9; margin-bottom: 25px; }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #38ef7d, #11998e);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(56,239,125,0.3); }
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            padding: 12px 25px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo"><i class="fas fa-trophy"></i></div>
+            <h2>SINCET Results</h2>
+        </div>
+        
+        <div class="card">
+            <div class="result-header">
+                <span class="badge"><i class="fas fa-graduation-cap"></i> {{ result.year }}</span>
+                {% if result.semester %}
+                <span class="badge"><i class="fas fa-book"></i> {{ result.semester }}</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <h1 class="title">{{ result.title }}</h1>
+                
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ departments[result.department]['name'] if result.department in departments else result.department }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Published On</div>
+                        <div class="info-value">{{ result.created_at.strftime('%d %b %Y') }}</div>
+                    </div>
+                </div>
+                
+                {% if result.description %}
+                <div class="description">{{ result.description }}</div>
+                {% endif %}
+                
+                {% if result.file_path %}
+                <a href="/static/{{ result.file_path }}" class="download-btn" target="_blank">
+                    <i class="fas fa-download"></i> Download Results
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+</body>
+</html>

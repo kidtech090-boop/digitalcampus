@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: linear-gradient(180deg, #1a1a2e, #16213e); padding: 20px; z-index: 1000; }
+        .sidebar-header { display: flex; align-items: center; gap: 15px; padding-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
+        .sidebar-logo { width: 50px; height: 50px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link { display: flex; align-items: center; gap: 12px; padding: 12px 15px; color: rgba(255,255,255,0.7); text-decoration: none; border-radius: 10px; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { background: rgba(102,126,234,0.2); color: white; }
+        .nav-link.active { background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.3)); }
+        .main-content { margin-left: 260px; padding: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .page-title { font-size: 1.8rem; }
+        .header-actions { display: flex; gap: 10px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #38ef7d, #11998e); color: white; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+        .btn:hover { transform: translateY(-2px); }
+        .table-container { background: rgba(255,255,255,0.05); border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 20px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: rgba(255,255,255,0.05); font-weight: 600; color: rgba(255,255,255,0.9); }
+        tr:hover { background: rgba(255,255,255,0.03); }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; }
+        .badge-success { background: rgba(56,239,125,0.2); color: #38ef7d; }
+        .badge-warning { background: rgba(255,193,7,0.2); color: #ffc107; }
+        .badge-danger { background: rgba(255,99,72,0.2); color: #ff6348; }
+        .empty-state { text-align: center; padding: 60px; }
+        .empty-state i { font-size: 4rem; opacity: 0.3; margin-bottom: 20px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 20px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo"><i class="fas fa-graduation-cap"></i></div>
+            <div><div style="font-size: 1.2rem; font-weight: 600;">SINCET</div><div style="font-size: 0.8rem; opacity: 0.5;">Notice Board</div></div>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="/dashboard" class="nav-link"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li class="nav-item"><a href="/notices" class="nav-link"><i class="fas fa-bullhorn"></i> Notices</a></li>
+            <li class="nav-item"><a href="/events" class="nav-link"><i class="fas fa-calendar-alt"></i> Events</a></li>
+            <li class="nav-item"><a href="/attendance" class="nav-link active"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+            <li class="nav-item"><a href="/results" class="nav-link"><i class="fas fa-trophy"></i> Results</a></li>
+            <li class="nav-item"><a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Attendance</h1>
+            <div class="header-actions">
+                <a href="/attendance/export" class="btn btn-secondary"><i class="fas fa-download"></i> Export Excel</a>
+                <a href="/attendance/add" class="btn btn-primary"><i class="fas fa-plus"></i> Mark Attendance</a>
+            </div>
+        </div>
+
+        {% if records %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                        <th>Total</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ record.date.strftime('%d %b %Y') }}</td>
+                        <td>{{ departments[record.department]['name'] if record.department in departments else record.department }}</td>
+                        <td>{{ record.year }}</td>
+                        <td>{{ record.total_students }}</td>
+                        <td><span class="badge badge-success">{{ record.present }}</span></td>
+                        <td><span class="badge badge-danger">{{ record.absent }}</span></td>
+                        <td>
+                            {% set pct = (record.present / record.total_students * 100) if record.total_students > 0 else 0 %}
+                            <span class="badge {% if pct >= 75 %}badge-success{% elif pct >= 50 %}badge-warning{% else %}badge-danger{% endif %}">
+                                {{ "%.1f"|format(pct) }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-clipboard-check"></i>
+            <h3>No Attendance Records</h3>
+            <p style="opacity: 0.6; margin-bottom: 20px;">Start marking attendance</p>
+            <a href="/attendance/add" class="btn btn-primary"><i class="fas fa-plus"></i> Mark Attendance</a>
+        </div>
+        {% endif %}
+    </main>
+</body>
+</html>

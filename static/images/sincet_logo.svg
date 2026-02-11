@@ -1,0 +1,9 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'>
+  <circle cx='200' cy='160' r='140' fill='none' stroke='%23c41e3a' stroke-width='6'/>
+  <polygon points='200,40 260,180 140,180' fill='none' stroke='%23c41e3a' stroke-width='4'/>
+  <text x='200' y='130' text-anchor='middle' font-size='20' font-weight='bold' fill='%23c41e3a'>NC</text>
+  <text x='200' y='170' text-anchor='middle' font-size='16' font-weight='bold' fill='%23c41e3a'>SINCET</text>
+  <text x='200' y='250' text-anchor='middle' font-size='22' font-weight='bold' fill='%23c41e3a'>SIR ISSAC NEWTON</text>
+  <text x='200' y='285' text-anchor='middle' font-size='16' font-weight='bold' fill='%23333'>COLLEGE OF ENGINEERING</text>
+  <text x='200' y='310' text-anchor='middle' font-size='16' font-weight='bold' fill='%23333'>&amp; TECHNOLOGY</text>
+</svg>

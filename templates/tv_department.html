@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Display - {{ department }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+        
+        .tv-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+        }
+        
+        /* Header */
+        .header {
+            height: 70px;
+            background: linear-gradient(90deg, rgba(0, 20, 40, 0.95) 0%, rgba(0, 30, 60, 0.95) 100%);
+            border-bottom: 3px solid;
+            border-image: linear-gradient(90deg, #00d4ff, #ff6b6b) 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            font-size: 18px;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.2);
+        }
+        
+        .header-left {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+        
+        .back-btn-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(102, 126, 234, 0.2));
+            border: 1px solid #00d4ff;
+            border-radius: 20px;
+            color: #00d4ff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .back-btn-header:hover {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.4), rgba(102, 126, 234, 0.4));
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .back-btn-header i {
+            font-size: 16px;
+        }
+        
+        .dept-badge {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(255, 107, 107, 0.15));
+            border: 1px solid;
+            border-image: linear-gradient(135deg, #00d4ff, #ff6b6b) 1;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: inset 0 0 10px rgba(0, 212, 255, 0.1);
+        }
+        
+        .time-display {
+            font-size: 22px;
+            color: #00ff88;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        /* Main Carousel */
+        .carousel-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #000814 0%, #001d3d 50%, #000814 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0, 212, 255, 0.1);
+        }
+        
+        .carousel-item {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-item.active {
+            display: flex;
+            animation: fadeInUp 0.7s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Image Slide */
+        .image-item {
+            background: #000;
+        }
+        
+        .image-item img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 10px 50px rgba(0, 212, 255, 0.3);
+        }
+        
+        /* Video Item */
+        .video-item {
+            background: #000;
+        }
+        
+        .video-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 15px;
+        }
+        
+        /* Event Item */
+        .event-item {
+            background: linear-gradient(135deg, #1a3a2a 0%, #0f1f18 100%);
+            flex-direction: column;
+            padding: 50px;
+            text-align: center;
+            position: relative;
+            border-left: 5px solid #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+        }
+        
+        .event-item::before {
+            content: '🎉';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        
+        .event-item .event-title {
+            font-size: 68px;
+            font-weight: bold;
+            color: #00ff00;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        
+        .event-item .event-meta {
+            font-size: 42px;
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .event-item .event-venue {
+            font-size: 34px;
+            color: #00ff00;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .event-item .event-description {
+            font-size: 30px;
+            color: #ddd;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .event-item .event-dept {
+            font-size: 28px;
+            color: #00ff88;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        /* Notice Item */
+        .notice-item {
+            background: linear-gradient(135deg, #3a1a2a 0%, #1f0f18 100%);
+            flex-direction: column;
+            padding: 60px;
+            text-align: center;
+            position: relative;
+            border-left: 5px solid #ff6b6b;
+            box-shadow: 0 0 30px rgba(255, 107, 107, 0.2);
+        }
+        
+        .notice-item::before {
+            content: '📢';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 40px;
+            opacity: 0.3;
+        }
+        
+        .notice-item .notice-priority {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: #fff;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 24px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .notice-item .notice-title {
+            font-size: 62px;
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        
+        .notice-item .notice-content {
+            font-size: 34px;
+            color: #ddd;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            max-height: 50%;
+            overflow: hidden;
+        }
+        
+        .notice-item .notice-dept {
+            font-size: 28px;
+            color: #ff6b6b;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        
+        /* Footer Bar */
+        .footer {
+            height: 65px;
+            background: linear-gradient(90deg, rgba(0, 20, 40, 0.95) 0%, rgba(0, 30, 60, 0.95) 100%);
+            border-top: 3px solid;
+            border-image: linear-gradient(90deg, #00d4ff, #ff6b6b) 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            font-size: 16px;
+            box-shadow: 0 -4px 20px rgba(0, 212, 255, 0.2);
+        }
+        
+        .footer-left {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .footer-item {
+            color: #aaa;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .footer-value {
+            color: #00d4ff;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .progress-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin: 0 30px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #ff6b6b);
+            width: 0%;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+        }
+        
+        .timer-hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="tv-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <span style="font-size: 24px; font-weight: bold; color: #00d4ff;">📺 TV DISPLAY</span>
+                <span class="dept-badge">{{ department }}</span>
+            </div>
+            <div class="header-right">
+                <div class="time-display">
+                    <span id="currentTime">--:--</span>
+                </div>
+                <a href="/dashboard" class="back-btn-header" title="Back to Dashboard">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Carousel -->
+        <div class="carousel-container">
+            <!-- Content will be inserted here -->
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-left">
+                <span class="footer-item">
+                    <i class="fas fa-video" style="color: #00d4ff;"></i>
+                    Content Type: <span class="footer-value" id="contentType">Loading</span>
+                </span>
+                <span class="footer-item">
+                    <i class="fas fa-list" style="color: #00d4ff;"></i>
+                    Total Items: <span class="footer-value" id="totalItems">0</span>
+                </span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // All content combined
+        let allContent = [];
+        let currentIndex = 0;
+        let currentTimer = 0;
+        let maxTimer = 0;
+        let carouselInterval = null;
+        let timerInterval = null;
+        
+        // Data from backend
+        const imagesData = {{ images | tojson }};
+        const videosData = {{ videos | tojson }};
+        const eventsData = {{ events | tojson }};
+        const noticesData = {{ notices | tojson }};
+        const photoDuration = {{ photo_duration }};
+        const videoDuration = {{ video_duration }};
+        const textDuration = {{ text_duration }};
+        
+        console.log('Images:', imagesData);
+        console.log('Videos:', videosData);
+        console.log('Events:', eventsData);
+        console.log('Notices:', noticesData);
+        
+        // Prepare all content - FIFO order (who uploaded first shows first)
+        function prepareContent() {
+            allContent = [];
+            
+            // Collect ALL content with created_at for FIFO sorting
+            let allItems = [];
+            
+            // Add images
+            imagesData.forEach((img) => {
+                allItems.push({
+                    type: 'image',
+                    id: 'img-' + img.id,
+                    title: img.title,
+                    data: img,
+                    duration: img.display_duration || photoDuration,
+                    created_at: img.created_at || ''
+                });
+            });
+            
+            // Add videos
+            videosData.forEach((video) => {
+                allItems.push({
+                    type: 'video',
+                    id: 'vid-' + video.id,
+                    title: video.title,
+                    data: video,
+                    duration: video.display_duration || videoDuration,
+                    created_at: video.created_at || ''
+                });
+            });
+            
+            // Add events
+            eventsData.forEach((event) => {
+                allItems.push({
+                    type: 'event',
+                    id: 'evt-' + event.id,
+                    title: event.title,
+                    data: event,
+                    duration: event.display_duration || (textDuration * 3),
+                    created_at: event.created_at || ''
+                });
+            });
+            
+            // Add notices
+            noticesData.forEach((notice) => {
+                allItems.push({
+                    type: 'notice',
+                    id: 'ntc-' + notice.id,
+                    title: notice.title,
+                    data: notice,
+                    duration: notice.display_duration || (textDuration * 4),
+                    created_at: notice.created_at || ''
+                });
+            });
+            
+            // Sort by created_at ascending (FIFO - first uploaded shows first)
+            allItems.sort((a, b) => {
+                if (!a.created_at && !b.created_at) return 0;
+                if (!a.created_at) return 1;
+                if (!b.created_at) return -1;
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+            
+            allContent = allItems;
+            
+            // If no content, show message
+            if (allContent.length === 0) {
+                allContent.push({
+                    type: 'empty',
+                    id: 'empty-0',
+                    title: 'No Content Available',
+                    data: {},
+                    duration: 5
+                });
+            }
+            
+            console.log('Total content items:', allContent.length);
+            document.getElementById('totalItems').textContent = allContent.length;
+        }
+        
+        // Create carousel item HTML
+        function createCarouselItem(item) {
+            let html = `<div class="carousel-item ${item.type}-item" id="item-${item.id}">`;
+            
+            switch(item.type) {
+                case 'image':
+                    html += `<img src="/static/${item.data.file_path}" alt="${item.data.title}" onerror="console.error('Image failed to load')">`;
+                    break;
+                    
+                case 'video':
+                    html += `<video autoplay muted playsinline>
+                        <source src="/static/${item.data.file_path}" type="video/mp4">
+                    </video>`;
+                    break;
+                    
+                case 'event':
+                    const eventDate = new Date(item.data.event_date);
+                    const eventDateStr = eventDate.toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                    if (item.data.image) {
+                        // Event WITH image - full image, info box on right side corner
+                        html += `
+                            <div style="width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; background: #000;">
+                                <img src="/static/${item.data.image}" style="max-width: 100%; max-height: 100%; object-fit: contain;" onerror="this.style.display='none'">
+                                <div class="event-info-box" style="
+                                    position: absolute;
+                                    top: 20px;
+                                    right: 20px;
+                                    background: rgba(0, 0, 0, 0.75);
+                                    backdrop-filter: blur(10px);
+                                    padding: 18px 22px;
+                                    border-radius: 14px;
+                                    border: 1px solid rgba(255,255,255,0.15);
+                                    max-width: 320px;
+                                    text-align: left;
+                                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                                ">
+                                    <div style="font-size: 17px; font-weight: 700; color: #00ff88; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">${item.data.title}</div>
+                                    <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">📅 ${eventDateStr}</div>
+                                    <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">⏰ ${item.data.event_time || 'TBD'}</div>
+                                    <div style="font-size: 14px; color: #00d4ff; margin-bottom: 5px;">📍 ${item.data.venue || 'Location TBD'}</div>
+                                    <div style="font-size: 13px; color: #ffd700; font-weight: 600; text-transform: uppercase;">${item.data.department || 'General'}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Event WITHOUT image - text only
+                        html += `
+                            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px;">
+                                <div class="event-title">${item.data.title}</div>
+                                <div class="event-meta">📅 ${eventDateStr} | ⏰ ${item.data.event_time || 'TBD'}</div>
+                                <div class="event-venue">📍 ${item.data.venue || 'Location TBD'}</div>
+                                ${item.data.description ? `<div class="event-description">${item.data.description}</div>` : ''}
+                                <div class="event-dept">${item.data.department || 'General'}</div>
+                            </div>
+                        `;
+                    }
+                    break;
+                    
+                case 'notice':
+                    html += `
+                        <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;">
+                            ${item.data.priority ? `<div class="notice-priority">${item.data.priority.toUpperCase()}</div>` : ''}
+                            <div class="notice-title">${item.data.title}</div>
+                            <div class="notice-content">${item.data.content}</div>
+                            <div class="notice-dept">${item.data.department || 'General'}</div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'empty':
+                    html += `
+                        <div style="width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                            <div style="font-size: 64px; color: #666;">📭</div>
+                            <div style="font-size: 48px; color: #666; margin-top: 20px;">No Content Added Yet</div>
+                            <div style="font-size: 32px; color: #555; margin-top: 20px;">Add images, videos, events, or notices to display</div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // Initialize carousel
+        function initCarousel() {
+            const carousel = document.querySelector('.carousel-container');
+            carousel.innerHTML = '';
+            
+            allContent.forEach(item => {
+                carousel.innerHTML += createCarouselItem(item);
+            });
+            
+            showItem(0);
+        }
+        
+        // Show specific item
+        function showItem(index) {
+            if (allContent.length === 0) return;
+            
+            currentIndex = index % allContent.length;
+            const item = allContent[currentIndex];
+            
+            console.log('Showing item:', currentIndex, item.type);
+            
+            // Hide all items
+            document.querySelectorAll('.carousel-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show current item
+            const itemEl = document.getElementById(`item-${item.id}`);
+            if (itemEl) {
+                itemEl.classList.add('active');
+            }
+            
+            // Update content type
+            document.getElementById('contentType').textContent = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+            
+            // Pause videos from previous item
+            document.querySelectorAll('video').forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+            });
+            
+            // Play video if it's a video item
+            if (item.type === 'video' && itemEl) {
+                const video = itemEl.querySelector('video');
+                if (video) {
+                    video.play().catch(err => console.error('Video play error:', err));
+                }
+            }
+            
+            maxTimer = item.duration;
+            currentTimer = 0;
+            updateTimer();
+            
+            // Auto advance to next item
+            clearTimeout(carouselInterval);
+            carouselInterval = setTimeout(() => {
+                showItem(currentIndex + 1);
+            }, item.duration * 1000);
+        }
+        
+        // Update timer display
+        function updateTimer() {
+            const remaining = Math.max(0, Math.ceil(maxTimer - currentTimer));
+            // Timer not displayed anymore - only progress bar
+            document.getElementById('progressBar').style.width = ((currentTimer / maxTimer) * 100) + '%';
+            
+            if (currentTimer < maxTimer) {
+                currentTimer += 0.1;
+            }
+        }
+        
+        // Start timer interval
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+        }
+        
+        // Update time display
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                hour12: false
+            });
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            console.log('Page loaded, initializing carousel');
+            updateTime();
+            setInterval(updateTime, 1000);
+            prepareContent();
+            initCarousel();
+            startTimer();
+        });
+        
+        // SocketIO for real-time updates
+        const socket = io();
+        
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+        
+        socket.on('content_updated', (data) => {
+            console.log('Content updated:', data);
+            location.reload();
+        });
+        
+        socket.on('tv_refresh', (data) => {
+            console.log('TV refresh requested');
+            location.reload();
+        });
+        
+        // Handle visibility change to pause/resume carousel
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearTimeout(carouselInterval);
+                clearInterval(timerInterval);
+            } else {
+                startTimer();
+                if (currentIndex < allContent.length) {
+                    showItem(currentIndex);
+                }
+            }
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') {
+                showItem(currentIndex + 1);
+            } else if (e.key === 'ArrowLeft') {
+                showItem(currentIndex - 1);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Attendance - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 25px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2rem; font-weight: 600; display: flex; align-items: center; gap: 15px; }
+        .page-title i { color: #667eea; }
+        
+        .header-actions { display: flex; gap: 15px; flex-wrap: wrap; }
+        .btn { padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 500; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px; border: none; cursor: pointer; font-size: 0.95rem; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-success { background: linear-gradient(135deg, #38ef7d, #11998e); color: white; }
+        .btn:hover { transform: translateY(-2px); }
+        
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .filter-select { padding: 12px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 1rem; min-width: 180px; }
+        .filter-select:focus { outline: none; border-color: #667eea; }
+        .filter-select option { background: #1a1a2e; }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-info { background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.3); color: #667eea; }
+        
+        .date-range { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px 20px; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .date-range-label { color: rgba(255,255,255,0.6); }
+        .date-range strong { color: #667eea; }
+        
+        .table-container { background: rgba(255,255,255,0.05); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        .table-scroll { overflow-x: auto; }
+        
+        .table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        .table th, .table td { padding: 12px 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .table th { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.7); font-weight: 600; font-size: 0.85rem; position: sticky; top: 0; z-index: 10; }
+        .table th.sticky { position: sticky; left: 0; background: #1a1a2e; z-index: 20; }
+        .table td.sticky { position: sticky; left: 0; background: #0f0f1a; }
+        .table tr:hover td { background: rgba(255,255,255,0.03); }
+        .table tr:hover td.sticky { background: #1f1f2e; }
+        
+        .student-info { display: flex; align-items: center; gap: 10px; text-align: left; min-width: 200px; }
+        .student-avatar { width: 35px; height: 35px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; flex-shrink: 0; }
+        .student-name { font-weight: 500; font-size: 0.9rem; }
+        .student-regno { font-size: 0.75rem; color: rgba(255,255,255,0.5); }
+        
+        .status-cell { font-weight: 600; }
+        .status-cell.present { color: #38ef7d; }
+        .status-cell.absent { color: #ff6348; }
+        .status-cell.no-data { color: rgba(255,255,255,0.2); }
+        
+        .percentage-cell { font-weight: 700; padding: 8px 12px; border-radius: 8px; }
+        .percentage-cell.high { background: rgba(56, 239, 125, 0.2); color: #38ef7d; }
+        .percentage-cell.medium { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+        .percentage-cell.low { background: rgba(255, 99, 72, 0.2); color: #ff6348; }
+        
+        .date-header { font-size: 0.75rem; }
+        .date-header .day { display: block; font-weight: 400; color: rgba(255,255,255,0.5); }
+        
+        .legend { display: flex; gap: 20px; padding: 15px 20px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .legend-dot.present { background: #38ef7d; }
+        .legend-dot.absent { background: #ff6348; }
+        .legend-dot.no-data { background: rgba(255,255,255,0.2); }
+        
+        .empty-state { text-align: center; padding: 60px 30px; color: rgba(255,255,255,0.5); }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
+        
+        .summary-row { background: rgba(102, 126, 234, 0.1) !important; }
+        .summary-row td { font-weight: 600; border-top: 2px solid rgba(102, 126, 234, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-chart-bar"></i> Attendance Report</h1>
+            <div class="header-actions">
+                <a href="/attendance/mark" class="btn btn-primary"><i class="fas fa-clipboard-check"></i> Mark Attendance</a>
+                <a href="/attendance/export?department={{ selected_dept or '' }}&year={{ selected_year or '' }}" class="btn btn-success"><i class="fas fa-download"></i> Export Excel</a>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <form method="GET" action="/attendance/view" class="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label">Department</label>
+                <select name="department" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Select Department</option>
+                    <option value="CSE" {% if selected_dept == 'CSE' %}selected{% endif %}>CSE</option>
+                    <option value="ECE" {% if selected_dept == 'ECE' %}selected{% endif %}>ECE</option>
+                    <option value="EEE" {% if selected_dept == 'EEE' %}selected{% endif %}>EEE</option>
+                    <option value="MECH" {% if selected_dept == 'MECH' %}selected{% endif %}>MECH</option>
+                    <option value="CIVIL" {% if selected_dept == 'CIVIL' %}selected{% endif %}>CIVIL</option>
+                    <option value="IT" {% if selected_dept == 'IT' %}selected{% endif %}>IT</option>
+                    <option value="AIDS" {% if selected_dept == 'AIDS' %}selected{% endif %}>AIDS</option>
+                    <option value="AIML" {% if selected_dept == 'AIML' %}selected{% endif %}>AIML</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Year</label>
+                <select name="year" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Select Year</option>
+                    <option value="1st Year" {% if selected_year == '1st Year' %}selected{% endif %}>1st Year</option>
+                    <option value="2nd Year" {% if selected_year == '2nd Year' %}selected{% endif %}>2nd Year</option>
+                    <option value="3rd Year" {% if selected_year == '3rd Year' %}selected{% endif %}>3rd Year</option>
+                    <option value="4th Year" {% if selected_year == '4th Year' %}selected{% endif %}>4th Year</option>
+                </select>
+            </div>
+        </form>
+        
+        {% if students and dates %}
+        <div class="date-range">
+            <span class="date-range-label"><i class="fas fa-calendar-alt"></i> Showing last 10 days:</span>
+            <strong>{{ dates[-1].strftime('%d %b %Y') }} - {{ dates[0].strftime('%d %b %Y') }}</strong>
+        </div>
+        
+        <div class="table-container">
+            <div class="table-scroll">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="sticky">S.No</th>
+                            <th class="sticky" style="left: 50px;">Student</th>
+                            <th>Reg. No.</th>
+                            {% for date in dates %}
+                            <th>
+                                <div class="date-header">
+                                    {{ date.strftime('%d') }}
+                                    <span class="day">{{ date.strftime('%a') }}</span>
+                                </div>
+                            </th>
+                            {% endfor %}
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Overall %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% set student_data = attendance_data.get(student.id, {}) %}
+                        {% set present_count = student_data.get('present', 0) %}
+                        {% set absent_count = student_data.get('absent', 0) %}
+                        {% set total = present_count + absent_count %}
+                        {% set percentage = ((present_count / total) * 100)|round(1) if total > 0 else 0 %}
+                        <tr>
+                            <td class="sticky">{{ loop.index }}</td>
+                            <td class="sticky" style="left: 50px;">
+                                <div class="student-info">
+                                    <div class="student-avatar">{{ student.name[0]|upper }}</div>
+                                    <div>
+                                        <div class="student-name">{{ student.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="font-size: 0.85rem;">{{ student.register_number }}</td>
+                            {% for date in dates %}
+                            {% set day_status = student_data.get('dates', {}).get(date.strftime('%Y-%m-%d'), '') %}
+                            <td class="status-cell {{ day_status if day_status else 'no-data' }}">
+                                {% if day_status == 'present' %}
+                                P
+                                {% elif day_status == 'absent' %}
+                                A
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td style="color: #38ef7d; font-weight: 600;">{{ present_count }}</td>
+                            <td style="color: #ff6348; font-weight: 600;">{{ absent_count }}</td>
+                            <td>
+                                <span class="percentage-cell {% if percentage >= 75 %}high{% elif percentage >= 50 %}medium{% else %}low{% endif %}">
+                                    {{ percentage }}%
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot present"></div> P = Present</div>
+                <div class="legend-item"><div class="legend-dot absent"></div> A = Absent</div>
+                <div class="legend-item"><div class="legend-dot no-data"></div> - = No Data</div>
+                <div class="legend-item" style="margin-left: auto;">
+                    <i class="fas fa-info-circle" style="color: #667eea;"></i>
+                    Total Students: {{ students|length }}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="table-container">
+            <div class="empty-state">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>No Attendance Data</h3>
+                <p>Select a department and year to view attendance records.</p>
+                <a href="/attendance/mark" class="btn btn-primary" style="margin-top: 20px;"><i class="fas fa-clipboard-check"></i> Mark Attendance</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Student - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .container { max-width: 700px; margin: 0 auto; padding: 30px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 25px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .page-title { font-size: 2rem; font-weight: 600; margin-bottom: 30px; display: flex; align-items: center; gap: 15px; }
+        .page-title i { color: #667eea; }
+        
+        .form-card { background: rgba(255,255,255,0.05); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); padding: 40px; }
+        
+        .form-group { margin-bottom: 25px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; color: rgba(255,255,255,0.8); }
+        .form-label .required { color: #ff6348; }
+        
+        .form-control { width: 100%; padding: 15px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; transition: all 0.3s; }
+        .form-control:focus { outline: none; border-color: #667eea; background: rgba(255,255,255,0.08); }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+        
+        select.form-control { cursor: pointer; }
+        select.form-control option { background: #1a1a2e; color: white; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+        
+        .btn { padding: 15px 30px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; width: 100%; }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4); }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(56,239,125,0.2); border: 1px solid rgba(56,239,125,0.3); color: #38ef7d; }
+        .alert-danger { background: rgba(255,99,72,0.2); border: 1px solid rgba(255,99,72,0.3); color: #ff6348; }
+        
+        .info-box { background: rgba(102, 126, 234, 0.1); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: 12px; padding: 15px 20px; margin-bottom: 25px; font-size: 0.9rem; color: rgba(255,255,255,0.7); }
+        .info-box i { color: #667eea; margin-right: 10px; }
+        
+        .quick-add { margin-top: 30px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .quick-add p { color: rgba(255,255,255,0.5); margin-bottom: 15px; }
+        .quick-add a { color: #667eea; text-decoration: none; font-weight: 500; }
+        .quick-add a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/students" class="back-link"><i class="fas fa-arrow-left"></i> Back to Students</a>
+        
+        <h1 class="page-title"><i class="fas fa-user-plus"></i> Add New Student</h1>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <div class="form-card">
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Fill in the student details. Register number should be unique for each student.
+            </div>
+            
+            <form method="POST" action="/student/add">
+                <div class="form-group">
+                    <label class="form-label">Student Name <span class="required">*</span></label>
+                    <input type="text" name="name" class="form-control" placeholder="Enter student's full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Register Number <span class="required">*</span></label>
+                    <input type="text" name="register_number" class="form-control" placeholder="e.g., 2021CSE001" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Department <span class="required">*</span></label>
+                        <select name="department" class="form-control" required>
+                            <option value="">Select Department</option>
+                            <option value="CSE">CSE - Computer Science</option>
+                            <option value="ECE">ECE - Electronics & Communication</option>
+                            <option value="EEE">EEE - Electrical & Electronics</option>
+                            <option value="MECH">MECH - Mechanical</option>
+                            <option value="CIVIL">CIVIL - Civil Engineering</option>
+                            <option value="IT">IT - Information Technology</option>
+                            <option value="AIDS">AIDS - AI & Data Science</option>
+                            <option value="AIML">AIML - AI & Machine Learning</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Year <span class="required">*</span></label>
+                        <select name="year" class="form-control" required>
+                            <option value="">Select Year</option>
+                            <option value="1st Year">1st Year</option>
+                            <option value="2nd Year">2nd Year</option>
+                            <option value="3rd Year">3rd Year</option>
+                            <option value="4th Year">4th Year</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Student
+                </button>
+            </form>
+            
+            <div class="quick-add">
+                <p>Need to add multiple students at once?</p>
+                <a href="/student/bulk-add"><i class="fas fa-file-excel"></i> Use Bulk Import Feature</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

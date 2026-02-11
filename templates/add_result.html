@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Result - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            color: white;
+            padding: 30px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .back-link:hover { color: white; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, rgba(255,236,210,0.3), rgba(252,182,159,0.3));
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .card-header h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 12px; }
+        .card-body { padding: 30px; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+        }
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #fcb69f;
+            background: rgba(255,255,255,0.15);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        textarea.form-control { min-height: 100px; resize: vertical; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #ffecd2, #fcb69f);
+            color: #333;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(252,182,159,0.4); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            margin-right: 15px;
+        }
+        .form-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/results" class="back-link"><i class="fas fa-arrow-left"></i> Back to Results</a>
+        
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-file-alt"></i> Add New Result</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="title">Result Title *</label>
+                        <input type="text" id="title" name="title" class="form-control" 
+                               placeholder="e.g., Internal Assessment 1 Results" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="department">Department *</label>
+                            <select id="department" name="department" class="form-control" required>
+                                <option value="">Select Department</option>
+                                {% for code, dept in departments.items() %}
+                                <option value="{{ code }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="year">Year *</label>
+                            <select id="year" name="year" class="form-control" required>
+                                <option value="">Select Year</option>
+                                {% for year in years %}
+                                <option value="{{ year }}">{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="semester">Semester</label>
+                        <select id="semester" name="semester" class="form-control">
+                            <option value="">Select Semester</option>
+                            <option value="Semester 1">Semester 1</option>
+                            <option value="Semester 2">Semester 2</option>
+                            <option value="Semester 3">Semester 3</option>
+                            <option value="Semester 4">Semester 4</option>
+                            <option value="Semester 5">Semester 5</option>
+                            <option value="Semester 6">Semester 6</option>
+                            <option value="Semester 7">Semester 7</option>
+                            <option value="Semester 8">Semester 8</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description (Optional)</label>
+                        <textarea id="description" name="description" class="form-control" 
+                                  placeholder="Add any additional details..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="file">Result File (PDF/Excel)</label>
+                        <input type="file" id="file" name="file" class="form-control" 
+                               accept=".pdf,.xlsx,.xls,.doc,.docx">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="/results" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Publish Result
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Notice - SINCET</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            color: white;
+            padding: 30px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            margin-bottom: 20px;
+        }
+        .back-link:hover { color: white; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 25px 30px;
+            background: linear-gradient(135deg, rgba(102,126,234,0.3), rgba(118,75,162,0.3));
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .card-header h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 12px; }
+        .card-body { padding: 30px; }
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+        }
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255,255,255,0.15);
+        }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        textarea.form-control { min-height: 150px; resize: vertical; }
+        select.form-control { cursor: pointer; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(102,126,234,0.4); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            margin-right: 15px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .form-actions { display: flex; justify-content: flex-end; margin-top: 30px; }
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        
+        <div class="card">
+            <div class="card-header">
+                <h1><i class="fas fa-plus-circle"></i> Add New Notice</h1>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="title">Notice Title *</label>
+                        <input type="text" id="title" name="title" class="form-control" 
+                               placeholder="Enter notice title" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="content">Notice Content *</label>
+                        <textarea id="content" name="content" class="form-control" 
+                                  placeholder="Enter notice content..." required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="priority">Priority</label>
+                            <select id="priority" name="priority" class="form-control">
+                                <option value="normal">Normal</option>
+                                <option value="important">Important</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="department">Department</label>
+                            <select id="department" name="department" class="form-control">
+                                <option value="">All Departments</option>
+                                {% for code, dept in departments.items() %}
+                                <option value="{{ code }}">{{ dept.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expires_at">Expiry Date (Optional)</label>
+                            <input type="date" id="expires_at" name="expires_at" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="attachment">Attachment (Optional)</label>
+                            <input type="file" id="attachment" name="attachment" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="display_duration">Display Duration on TV (seconds)</label>
+                        <input type="number" id="display_duration" name="display_duration" class="form-control" 
+                               value="10" min="3" max="120" placeholder="How long to show on TV (in seconds)">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="/dashboard" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Publish Notice
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance - SINCET Digital Notice Board</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f1a; min-height: 100vh; color: white; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 30px; }
+        
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.7); text-decoration: none; margin-bottom: 25px; transition: all 0.3s; }
+        .back-link:hover { color: white; transform: translateX(-5px); }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-size: 2rem; font-weight: 600; display: flex; align-items: center; gap: 15px; }
+        .page-title i { color: #38ef7d; }
+        
+        .date-display { background: linear-gradient(135deg, #667eea, #764ba2); padding: 15px 25px; border-radius: 12px; font-size: 1.1rem; font-weight: 500; }
+        .date-display i { margin-right: 10px; }
+        
+        .filter-bar { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: flex-end; }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; }
+        .filter-label { font-size: 0.85rem; color: rgba(255,255,255,0.6); }
+        .filter-select { padding: 12px 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 1rem; min-width: 180px; }
+        .filter-select:focus { outline: none; border-color: #667eea; }
+        .filter-select option { background: #1a1a2e; }
+        
+        .btn { padding: 12px 24px; border-radius: 10px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; border: none; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4); }
+        .btn-success { background: linear-gradient(135deg, #38ef7d, #11998e); color: white; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(56, 239, 125, 0.4); }
+        
+        .alert { padding: 15px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .alert-success { background: rgba(56,239,125,0.2); border: 1px solid rgba(56,239,125,0.3); color: #38ef7d; }
+        .alert-danger { background: rgba(255,99,72,0.2); border: 1px solid rgba(255,99,72,0.3); color: #ff6348; }
+        .alert-warning { background: rgba(255, 193, 7, 0.2); border: 1px solid rgba(255, 193, 7, 0.3); color: #ffc107; }
+        
+        .attendance-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-box { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-value { font-size: 2rem; font-weight: 700; }
+        .stat-value.total { color: #667eea; }
+        .stat-value.present { color: #38ef7d; }
+        .stat-value.absent { color: #ff6348; }
+        .stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-top: 5px; }
+        
+        .bulk-actions { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .bulk-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: all 0.3s; }
+        .bulk-btn.mark-all-present { background: rgba(56, 239, 125, 0.2); color: #38ef7d; border: 1px solid rgba(56, 239, 125, 0.3); }
+        .bulk-btn.mark-all-absent { background: rgba(255, 99, 72, 0.2); color: #ff6348; border: 1px solid rgba(255, 99, 72, 0.3); }
+        .bulk-btn:hover { transform: scale(1.05); }
+        
+        .attendance-form { background: rgba(255,255,255,0.05); border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
+        
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .table th { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.7); font-weight: 600; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; }
+        .table tr:hover { background: rgba(255,255,255,0.03); }
+        .table tr:last-child td { border-bottom: none; }
+        
+        .student-info { display: flex; align-items: center; gap: 15px; }
+        .student-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .student-name { font-weight: 500; }
+        .student-regno { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+        
+        .attendance-toggle { display: flex; gap: 5px; }
+        .toggle-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; transition: all 0.3s; }
+        .toggle-btn.present { background: rgba(56, 239, 125, 0.1); color: rgba(56, 239, 125, 0.5); border: 1px solid transparent; }
+        .toggle-btn.present.active { background: rgba(56, 239, 125, 0.3); color: #38ef7d; border: 1px solid #38ef7d; }
+        .toggle-btn.absent { background: rgba(255, 99, 72, 0.1); color: rgba(255, 99, 72, 0.5); border: 1px solid transparent; }
+        .toggle-btn.absent.active { background: rgba(255, 99, 72, 0.3); color: #ff6348; border: 1px solid #ff6348; }
+        
+        .submit-section { padding: 25px; background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+        
+        .empty-state { text-align: center; padding: 60px 30px; color: rgba(255,255,255,0.5); }
+        .empty-state i { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
+        
+        @media (max-width: 768px) {
+            .attendance-form { overflow-x: auto; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/dashboard" class="back-link"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        
+        <div class="page-header">
+            <h1 class="page-title"><i class="fas fa-clipboard-check"></i> Mark Attendance</h1>
+            <div class="date-display">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="currentDate">{{ today.strftime('%A, %d %B %Y') if today else 'Today' }}</span>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}"><i class="fas fa-info-circle"></i> {{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        
+        <!-- Filters -->
+        <form method="GET" action="/attendance/mark" class="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label">Department</label>
+                <select name="department" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Select Department</option>
+                    {% for dept_code, dept_info in departments.items() %}
+                    <option value="{{ dept_code }}" {% if selected_dept == dept_code %}selected{% endif %}>{{ dept_info.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Year</label>
+                <select name="year" class="filter-select" onchange="this.form.submit()">
+                    <option value="">Select Year</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Date</label>
+                <input type="date" name="date" class="filter-select" value="{{ selected_date }}" onchange="this.form.submit()">
+            </div>
+        </form>
+        
+        {% if students %}
+        <!-- Stats -->
+        <div class="attendance-stats">
+            <div class="stat-box">
+                <div class="stat-value total" id="totalCount">{{ students|length }}</div>
+                <div class="stat-label">Total Students</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value present" id="presentCount">0</div>
+                <div class="stat-label">Present</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value absent" id="absentCount">0</div>
+                <div class="stat-label">Absent</div>
+            </div>
+        </div>
+        
+        <!-- Bulk Actions -->
+        <div class="bulk-actions">
+            <button type="button" class="bulk-btn mark-all-present" onclick="markAll('present')">
+                <i class="fas fa-check-double"></i> Mark All Present
+            </button>
+            <button type="button" class="bulk-btn mark-all-absent" onclick="markAll('absent')">
+                <i class="fas fa-times"></i> Mark All Absent
+            </button>
+        </div>
+        
+        <!-- Attendance Form -->
+        <form method="POST" action="/attendance/mark" id="attendanceForm">
+            <input type="hidden" name="department" value="{{ selected_dept }}">
+            <input type="hidden" name="year" value="{{ selected_year }}">
+            <input type="hidden" name="date" value="{{ selected_date }}">
+            
+            <div class="attendance-form">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Student</th>
+                            <th>Register Number</th>
+                            <th>Attendance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="student-info">
+                                    <div class="student-avatar">{{ student.name[0]|upper }}</div>
+                                    <div>
+                                        <div class="student-name">{{ student.name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ student.register_number }}</td>
+                            <td>
+                                <div class="attendance-toggle">
+                                    <input type="hidden" name="attendance_{{ student.id }}" id="att_{{ student.id }}" value="{{ existing_attendance.get(student.id, '') }}">
+                                    <button type="button" class="toggle-btn present {% if existing_attendance.get(student.id) == 'present' %}active{% endif %}" onclick="toggleAttendance({{ student.id }}, 'present')">
+                                        <i class="fas fa-check"></i> Present
+                                    </button>
+                                    <button type="button" class="toggle-btn absent {% if existing_attendance.get(student.id) == 'absent' %}active{% endif %}" onclick="toggleAttendance({{ student.id }}, 'absent')">
+                                        <i class="fas fa-times"></i> Absent
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                <div class="submit-section">
+                    <div style="color: rgba(255,255,255,0.5);">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="unmarkedCount">{{ students|length }}</span> students unmarked
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save Attendance
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% else %}
+        <div class="attendance-form">
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h3>No Students Found</h3>
+                <p>{% if not selected_dept or not selected_year %}Select a department and year to view students.{% else %}No students available for this department and year. Add students first.{% endif %}</p>
+                {% if not selected_dept or not selected_year %}
+                <p style="margin-top: 10px; font-size: 0.9rem;">Department: <strong>{{ selected_dept or 'Not selected' }}</strong> | Year: <strong>{{ selected_year or 'Not selected' }}</strong></p>
+                {% endif %}
+                <a href="/students" class="btn btn-primary" style="margin-top: 20px;"><i class="fas fa-user-plus"></i> Manage Students</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <script>
+        function toggleAttendance(studentId, status) {
+            const input = document.getElementById('att_' + studentId);
+            const presentBtn = input.parentElement.querySelector('.toggle-btn.present');
+            const absentBtn = input.parentElement.querySelector('.toggle-btn.absent');
+            
+            if (input.value === status) {
+                // Deselect if clicking same button
+                input.value = '';
+                presentBtn.classList.remove('active');
+                absentBtn.classList.remove('active');
+            } else {
+                input.value = status;
+                presentBtn.classList.toggle('active', status === 'present');
+                absentBtn.classList.toggle('active', status === 'absent');
+            }
+            
+            updateCounts();
+        }
+        
+        function markAll(status) {
+            document.querySelectorAll('input[id^="att_"]').forEach(input => {
+                const studentId = input.id.replace('att_', '');
+                input.value = status;
+                const presentBtn = input.parentElement.querySelector('.toggle-btn.present');
+                const absentBtn = input.parentElement.querySelector('.toggle-btn.absent');
+                presentBtn.classList.toggle('active', status === 'present');
+                absentBtn.classList.toggle('active', status === 'absent');
+            });
+            updateCounts();
+        }
+        
+        function updateCounts() {
+            let present = 0, absent = 0, unmarked = 0;
+            document.querySelectorAll('input[id^="att_"]').forEach(input => {
+                if (input.value === 'present') present++;
+                else if (input.value === 'absent') absent++;
+                else unmarked++;
+            });
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+            document.getElementById('unmarkedCount').textContent = unmarked;
+        }
+        
+        // Initialize counts on page load
+        updateCounts();
+    </script>
+</body>
+</html>
