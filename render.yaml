@@ -12,6 +12,8 @@ services:
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.7
+      - key: PORT
+        value: 10000
     disk:
       name: sincet-data
       mountPath: /opt/render/project/src/instance

@@ -844,7 +844,7 @@ def api_media(dept):
     else:
         images = MediaContent.query.filter((MediaContent.department == dept) | (MediaContent.department == None), MediaContent.content_type == 'image', MediaContent.is_active == True).all()
         videos = MediaContent.query.filter((MediaContent.department == dept) | (MediaContent.department == None), MediaContent.content_type == 'video', MediaContent.is_active == True).all()
-    return jsonify({'images': [{'id': i.id, 'path': i.file_path, 'title': i.title} for i in images], 'videos': [{'id': v.id, 'path': v.file_path, 'title': v.title} for v in videos]})
+    return jsonify({'images': [{'id': i.id, 'path': i.file_path, 'title': i.title, 'file_path': i.file_path, 'department': i.department, 'display_duration': i.display_duration or 10, 'created_at': i.created_at.isoformat() if i.created_at else None} for i in images], 'videos': [{'id': v.id, 'path': v.file_path, 'title': v.title, 'file_path': v.file_path, 'department': v.department, 'display_duration': v.display_duration or 10, 'created_at': v.created_at.isoformat() if v.created_at else None} for v in videos]})
 
 @app.route('/api/settings/<dept>')
 def api_settings(dept):
