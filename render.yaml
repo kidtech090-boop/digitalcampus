@@ -5,15 +5,13 @@ services:
   - type: web
     name: sincet-noticeboard
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
     startCommand: gunicorn --worker-class eventlet -w 1 --bind 0.0.0.0:$PORT wsgi:app
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION
         value: 3.11.7
-      - key: PORT
-        value: 10000
     disk:
       name: sincet-data
       mountPath: /opt/render/project/src/instance
