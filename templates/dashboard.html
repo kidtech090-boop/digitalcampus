@@ -340,9 +340,9 @@
     </main>
     
     <script>
-        // Attendance data from server
-        const attendanceData = {{ attendance_data|tojson|safe if attendance_data else '{}' }};
-        const deptYearPercentages = {{ dept_year_percentages|tojson|safe if dept_year_percentages else '{}' }};
+        // Attendance data from server (passed as dict, tojson encodes once)
+        const attendanceData = {{ attendance_data|tojson|safe }};
+        const deptYearPercentages = {{ dept_year_percentages|tojson|safe }};
         let chart, barChart;
         
         function updateChart(year) {
@@ -382,6 +382,8 @@
                     cutout: '60%'
                 }
             });
+            // Fix: update bar chart when year tab changes (was recursive before)
+            updateBarChart(year);
         }
 
         function updateBarChart(year) {
@@ -413,7 +415,6 @@
                     plugins: { legend: { display: false } }
                 }
             });
-            updateBarChart(year);
         }
         
         document.querySelectorAll('.tab-btn').forEach(btn => {

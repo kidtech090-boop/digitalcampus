@@ -277,6 +277,7 @@ def dashboard():
         total_events = Event.query.filter((Event.department == department) | (Event.department == None), Event.is_active == True).count()
         selected_dept = department
 
+    # Fix: compute attendance per year correctly
     attendance_data = {}
     for year in YEARS:
         query_dept = selected_dept if selected_dept != 'all' else None
@@ -285,8 +286,25 @@ def dashboard():
         total_absent = sum(AttendanceRecord.query.filter_by(student_id=s.id, status='absent').count() for s in students)
         attendance_data[year] = {'present': total_present, 'absent': total_absent, 'total': total_present + total_absent}
 
+    # Fix: compute per-department per-year percentages for bar chart
+    dept_year_percentages = {}
+    for year in YEARS:
+        dept_year_percentages[year] = {}
+        for dept_code in DEPARTMENTS:
+            students = Student.query.filter_by(department=dept_code, year=year, is_active=True).all()
+            tp = sum(AttendanceRecord.query.filter_by(student_id=s.id, status='present').count() for s in students)
+            ta = sum(AttendanceRecord.query.filter_by(student_id=s.id, status='absent').count() for s in students)
+            total = tp + ta
+            dept_year_percentages[year][dept_code] = round((tp / total * 100), 1) if total > 0 else 0
+
+    total_students = Student.query.filter_by(is_active=True).count() if selected_dept == 'all' or not selected_dept else Student.query.filter_by(department=selected_dept, is_active=True).count()
+    results = Result.query.filter_by(is_active=True).all()
+
+    # Fix: pass attendance_data as dict (not json string) — template uses |tojson
     return render_template('dashboard.html', notices=notices, events=events, total_notices=total_notices, total_events=total_events,
-                         attendance_data=json.dumps(attendance_data), departments=DEPARTMENTS, years=YEARS,
+                         attendance_data=attendance_data, dept_year_percentages=dept_year_percentages,
+                         total_students=total_students, results=results,
+                         departments=DEPARTMENTS, years=YEARS,
                          role=role, department=department, selected_dept=selected_dept)
 
 @app.route('/viewer')
@@ -330,7 +348,7 @@ def add_notice():
                        for_all_departments=for_all or session.get('role') == 'principal')
         db.session.add(notice)
         db.session.commit()
-        socketio.emit('content_update', {'type': 'notice', 'action': 'add', 'id': notice.id})
+        socketio.emit('content_updated', {'type': 'notice', 'action': 'add', 'id': notice.id})
         flash('Notice added successfully!', 'success')
         return redirect(url_for('notices'))
     return render_template('add_notice.html', departments=DEPARTMENTS, role=session.get('role'))
@@ -350,7 +368,7 @@ def delete_notice(id):
     notice = Notice.query.get_or_404(id)
     notice.is_active = False
     db.session.commit()
-    socketio.emit('content_update', {'type': 'notice', 'action': 'delete', 'id': id})
+    socketio.emit('content_updated', {'type': 'notice', 'action': 'delete', 'id': id})
     flash('Notice deleted successfully!', 'success')
     return redirect(url_for('notices'))
 
@@ -382,7 +400,7 @@ def add_event():
                      event_time=event_time, venue=venue, department=department, created_by=session.get('user_id'), image=image, display_duration=display_duration)
         db.session.add(event)
         db.session.commit()
-        socketio.emit('content_update', {'type': 'event', 'action': 'add', 'id': event.id})
+        socketio.emit('content_updated', {'type': 'event', 'action': 'add', 'id': event.id})
         flash('Event added successfully!', 'success')
         return redirect(url_for('events'))
     return render_template('add_event.html', departments=DEPARTMENTS)
@@ -402,7 +420,7 @@ def delete_event(id):
     event = Event.query.get_or_404(id)
     event.is_active = False
     db.session.commit()
-    socketio.emit('content_update', {'type': 'event', 'action': 'delete', 'id': id})
+    socketio.emit('content_updated', {'type': 'event', 'action': 'delete', 'id': id})
     flash('Event deleted successfully!', 'success')
     return redirect(url_for('events'))
 
@@ -693,7 +711,7 @@ def upload_media():
             display_duration = int(request.form.get('display_duration', 10))
             db.session.add(MediaContent(department=dept, content_type=content_type, file_path=file_path, title=title, display_duration=display_duration))
             db.session.commit()
-            socketio.emit('content_update', {'type': 'media', 'action': 'add'})
+            socketio.emit('content_updated', {'type': 'media', 'action': 'add'})
             flash('Media uploaded successfully!', 'success')
             return redirect(url_for('upload_media'))
 
@@ -706,7 +724,7 @@ def delete_media(id):
     media = MediaContent.query.get_or_404(id)
     media.is_active = False
     db.session.commit()
-    socketio.emit('content_update', {'type': 'media', 'action': 'delete'})
+    socketio.emit('content_updated', {'type': 'media', 'action': 'delete'})
     flash('Media deleted successfully!', 'success')
     return redirect(url_for('upload_media'))
 

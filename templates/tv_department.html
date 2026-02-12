@@ -124,8 +124,10 @@
             justify-content: center;
         }
 
-        /* Ensure child content centers and never creates side-by-side columns */
+        /* Ensure child content centers and fills the carousel item */
         .carousel-item > * {
+            width: 100%;
+            height: 100%;
             max-width: 100%;
             max-height: 100%;
             display: flex;
@@ -478,13 +480,25 @@
             
             switch(item.type) {
                 case 'image':
-                    html += `<img src="/static/${item.data.file_path}" alt="${item.data.title}" onerror="console.error('Image failed to load')">`;
+                    html += `<div style="width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;">
+                        <img src="/static/${item.data.file_path}" alt="${item.data.title}" style="max-width:100%;max-height:100%;object-fit:contain;" onerror="console.error('Image failed to load')">
+                        <div style="position:absolute;top:20px;right:20px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:12px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);max-width:300px;text-align:left;">
+                            <div style="font-size:clamp(12px,1.5vw,17px);font-weight:700;color:#00d4ff;">${item.data.title || ''}</div>
+                            ${item.data.department ? '<div style="font-size:clamp(10px,1.2vw,13px);color:#ffd700;margin-top:4px;text-transform:uppercase;">' + item.data.department + '</div>' : ''}
+                        </div>
+                    </div>`;
                     break;
                     
                 case 'video':
-                    html += `<video autoplay muted playsinline>
-                        <source src="/static/${item.data.file_path}" type="video/mp4">
-                    </video>`;
+                    html += `<div style="width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;">
+                        <video autoplay muted playsinline style="width:100%;height:100%;object-fit:contain;">
+                            <source src="/static/${item.data.file_path}" type="video/mp4">
+                        </video>
+                        <div style="position:absolute;top:20px;right:20px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);padding:12px 18px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);max-width:300px;text-align:left;">
+                            <div style="font-size:clamp(12px,1.5vw,17px);font-weight:700;color:#a855f7;">${item.data.title || ''}</div>
+                            ${item.data.department ? '<div style="font-size:clamp(10px,1.2vw,13px);color:#ffd700;margin-top:4px;text-transform:uppercase;">' + item.data.department + '</div>' : ''}
+                        </div>
+                    </div>`;
                     break;
                     
                 case 'event':
@@ -568,11 +582,22 @@
             showItem(0);
         }
         
+        // Dynamic theme colors per content type
+        const themeColors = {
+            image:  { bg: 'linear-gradient(135deg, #000814 0%, #001d3d 50%, #000814 100%)', accent: '#00d4ff' },
+            video:  { bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%)', accent: '#a855f7' },
+            notice: { bg: 'linear-gradient(135deg, #3a1a2a 0%, #1f0f18 100%)',               accent: '#ff6b6b' },
+            event:  { bg: 'linear-gradient(135deg, #1a3a2a 0%, #0f1f18 100%)',               accent: '#00ff88' },
+            empty:  { bg: '#000',                                                             accent: '#666'    }
+        };
+
         // Show specific item
         function showItem(index) {
             if (allContent.length === 0) return;
             
             currentIndex = index % allContent.length;
+            // Fix: handle negative wrap from ArrowLeft
+            if (currentIndex < 0) currentIndex = allContent.length - 1;
             const item = allContent[currentIndex];
             
             console.log('Showing item:', currentIndex, item.type);
@@ -587,6 +612,10 @@
             if (itemEl) {
                 itemEl.classList.add('active');
             }
+
+            // Apply dynamic theme background per content type
+            const theme = themeColors[item.type] || themeColors.empty;
+            document.querySelector('.carousel-container').style.background = theme.bg;
             
             // Update content type
             document.getElementById('contentType').textContent = item.type.charAt(0).toUpperCase() + item.type.slice(1);
@@ -660,36 +689,49 @@
             console.log('Connected to server');
         });
         
-        // Reload content atomically without a full page reload when possible
+        // Reload content atomically using API endpoints (no regex parsing)
         async function reloadContent() {
             try {
-                const resp = await fetch(window.location.href, { cache: 'no-store' });
-                const text = await resp.text();
+                const dept = '{{ dept }}';
+                const [mediaResp, noticesResp, eventsResp] = await Promise.all([
+                    fetch('/api/media/' + dept, { cache: 'no-store' }),
+                    fetch('/api/notices' + (dept !== 'all' ? '?dept=' + dept : ''), { cache: 'no-store' }),
+                    fetch('/api/events', { cache: 'no-store' })
+                ]);
 
-                function extractArr(name) {
-                    const re = new RegExp('(?:const|let)\\s+' + name + '\\s*=\\s*(\\[.*?\\]);', 's');
-                    const m = text.match(re);
-                    if (m && m[1]) return JSON.parse(m[1]);
-                    return null;
-                }
+                const mediaData = await mediaResp.json();
+                const noticesArr = await noticesResp.json();
+                const eventsArr = await eventsResp.json();
 
-                const newImages = extractArr('imagesData');
-                const newVideos = extractArr('videosData');
-                const newEvents = extractArr('eventsData');
-                const newNotices = extractArr('noticesData');
-
-                if (newImages) imagesData = newImages;
-                if (newVideos) videosData = newVideos;
-                if (newEvents) eventsData = newEvents;
-                if (newNotices) noticesData = newNotices;
+                // Update data arrays
+                imagesData = (mediaData.images || []).map(i => ({
+                    id: i.id, file_path: i.path, title: i.title, department: i.department || '',
+                    display_duration: photoDuration, created_at: i.created_at || ''
+                }));
+                videosData = (mediaData.videos || []).map(v => ({
+                    id: v.id, file_path: v.path, title: v.title, department: v.department || '',
+                    display_duration: videoDuration, created_at: v.created_at || ''
+                }));
+                noticesData = noticesArr.map(n => ({
+                    id: n.id, title: n.title, content: n.content, department: n.department,
+                    priority: n.priority, attachment: n.attachment, attachment_type: n.attachment_type,
+                    display_duration: textDuration * 4, created_at: n.created_at || ''
+                }));
+                eventsData = eventsArr.map(e => ({
+                    id: e.id, title: e.title, description: e.description,
+                    event_date: e.event_date, event_time: e.event_time,
+                    venue: e.venue, department: e.department, image: e.image,
+                    display_duration: textDuration * 3, created_at: e.created_at || ''
+                }));
 
                 // Rebuild queue and DOM atomically
+                clearTimeout(carouselInterval);
                 prepareContent();
                 initCarousel();
-                // restart timer cleanly
                 startTimer();
+                console.log('Content reloaded via API');
             } catch (err) {
-                console.error('reloadContent error, falling back to full reload', err);
+                console.error('reloadContent API error, falling back to full reload', err);
                 location.reload();
             }
         }
