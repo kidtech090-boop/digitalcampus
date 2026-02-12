@@ -194,7 +194,7 @@
                     <span class="principal-badge"><i class="fas fa-crown"></i> Principal</span>
                     {% endif %}
                 </h1>
-                <p class="page-subtitle">Welcome back, {{ session.get('name', 'User') }}! | Department: {{ session.get('department', 'All') }}</p>
+                <p class="page-subtitle">Welcome back! | Department: {{ session.get('department', 'All') }}</p>
             </div>
             <div class="user-info">
                 <div class="user-avatar"><i class="fas fa-user"></i></div>
@@ -255,7 +255,10 @@
                             <button class="tab-btn" data-year="4th Year">4th Year</button>
                         </div>
                         <div class="chart-container">
-                            <canvas id="attendanceChart"></canvas>
+                            <canvas id="attendanceChart" style="height:200px;"></canvas>
+                            <div style="height:260px; margin-top:20px;">
+                                <canvas id="attendanceBarChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -304,6 +307,7 @@
                             <a href="/student/bulk-add" class="quick-action"><i class="fas fa-file-excel"></i><span>Bulk Import</span></a>
                             <a href="/media/upload" class="quick-action"><i class="fas fa-upload"></i><span>Upload Media</span></a>
                             <a href="/attendance/export" class="quick-action"><i class="fas fa-download"></i><span>Export Data</span></a>
+                            <a href="/attendance/upload" class="quick-action"><i class="fas fa-file-upload"></i><span>Upload Attendance Summary</span></a>
                             <a href="/tv" class="quick-action" target="_blank"><i class="fas fa-tv"></i><span>TV Display</span></a>
                         </div>
                     </div>
@@ -338,7 +342,8 @@
     <script>
         // Attendance data from server
         const attendanceData = {{ attendance_data|tojson|safe if attendance_data else '{}' }};
-        let chart;
+        const deptYearPercentages = {{ dept_year_percentages|tojson|safe if dept_year_percentages else '{}' }};
+        let chart, barChart;
         
         function updateChart(year) {
             const data = attendanceData[year] || {present: 0, absent: 0};
@@ -377,6 +382,38 @@
                     cutout: '60%'
                 }
             });
+        }
+
+        function updateBarChart(year) {
+            const labels = [];
+            const values = [];
+            const depts = {{ departments | tojson }};
+            Object.keys(depts).forEach(dept => {
+                labels.push(depts[dept].name);
+                const pct = (deptYearPercentages[year] && deptYearPercentages[year][dept]) ? deptYearPercentages[year][dept] : 0;
+                values.push(pct);
+            });
+
+            const ctx = document.getElementById('attendanceBarChart').getContext('2d');
+            if (barChart) barChart.destroy();
+            barChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attendance %',
+                        data: values,
+                        backgroundColor: values.map(v => v >= 75 ? 'rgba(56, 239, 125, 0.8)' : v >= 60 ? 'rgba(255, 215, 0, 0.8)' : 'rgba(255, 99, 72, 0.8)')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 100, ticks: { color: 'white' } }, x: { ticks: { color: 'white' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+            updateBarChart(year);
         }
         
         document.querySelectorAll('.tab-btn').forEach(btn => {

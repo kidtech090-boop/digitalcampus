@@ -123,6 +123,15 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* Ensure child content centers and never creates side-by-side columns */
+        .carousel-item > * {
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         
         .carousel-item.active {
             display: flex;
@@ -390,84 +399,64 @@
         let timerInterval = null;
         
         // Data from backend
-        const imagesData = {{ images | tojson }};
-        const videosData = {{ videos | tojson }};
-        const eventsData = {{ events | tojson }};
-        const noticesData = {{ notices | tojson }};
-        const photoDuration = {{ photo_duration }};
-        const videoDuration = {{ video_duration }};
-        const textDuration = {{ text_duration }};
+        let imagesData = {{ images | tojson }};
+        let videosData = {{ videos | tojson }};
+        let eventsData = {{ events | tojson }};
+        let noticesData = {{ notices | tojson }};
+        // fallback defaults (minimal patch): keep default duration 10s if not provided
+        const photoDuration = (typeof {{ photo_duration }} !== 'undefined') ? {{ photo_duration }} : 10;
+        const videoDuration = (typeof {{ video_duration }} !== 'undefined') ? {{ video_duration }} : 10;
+        const textDuration = (typeof {{ text_duration }} !== 'undefined') ? {{ text_duration }} : 10;
         
         console.log('Images:', imagesData);
         console.log('Videos:', videosData);
         console.log('Events:', eventsData);
         console.log('Notices:', noticesData);
         
-        // Prepare all content - FIFO order (who uploaded first shows first)
+        // Prepare all content - strict category order and FIFO within each category
         function prepareContent() {
             allContent = [];
-            
-            // Collect ALL content with created_at for FIFO sorting
-            let allItems = [];
-            
-            // Add images
-            imagesData.forEach((img) => {
-                allItems.push({
-                    type: 'image',
-                    id: 'img-' + img.id,
-                    title: img.title,
-                    data: img,
-                    duration: img.display_duration || photoDuration,
-                    created_at: img.created_at || ''
-                });
-            });
-            
-            // Add videos
-            videosData.forEach((video) => {
-                allItems.push({
-                    type: 'video',
-                    id: 'vid-' + video.id,
-                    title: video.title,
-                    data: video,
-                    duration: video.display_duration || videoDuration,
-                    created_at: video.created_at || ''
-                });
-            });
-            
-            // Add events
-            eventsData.forEach((event) => {
-                allItems.push({
-                    type: 'event',
-                    id: 'evt-' + event.id,
-                    title: event.title,
-                    data: event,
-                    duration: event.display_duration || (textDuration * 3),
-                    created_at: event.created_at || ''
-                });
-            });
-            
-            // Add notices
-            noticesData.forEach((notice) => {
-                allItems.push({
-                    type: 'notice',
-                    id: 'ntc-' + notice.id,
-                    title: notice.title,
-                    data: notice,
-                    duration: notice.display_duration || (textDuration * 4),
-                    created_at: notice.created_at || ''
-                });
-            });
-            
-            // Sort by created_at ascending (FIFO - first uploaded shows first)
-            allItems.sort((a, b) => {
-                if (!a.created_at && !b.created_at) return 0;
-                if (!a.created_at) return 1;
-                if (!b.created_at) return -1;
+
+            // Helper to normalize created_at and duration
+            function norm(item, type, prefix, defaultDuration) {
+                return {
+                    type: type,
+                    id: prefix + (item.id || Math.random().toString(36).slice(2,8)),
+                    title: item.title || '',
+                    data: item,
+                    duration: (item.display_duration || defaultDuration),
+                    created_at: item.created_at || item.created_at_string || ''
+                };
+            }
+
+            // Build per-category arrays, keep FIFO by created_at ascending
+            const imgs = (imagesData || []).map(i => norm(i, 'image', 'img-', photoDuration)).sort((a,b)=>{
+                if(!a.created_at && !b.created_at) return 0;
+                if(!a.created_at) return 1; if(!b.created_at) return -1;
                 return new Date(a.created_at) - new Date(b.created_at);
             });
-            
-            allContent = allItems;
-            
+
+            const vids = (videosData || []).map(v => norm(v, 'video', 'vid-', videoDuration)).sort((a,b)=>{
+                if(!a.created_at && !b.created_at) return 0;
+                if(!a.created_at) return 1; if(!b.created_at) return -1;
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+
+            const ntcs = (noticesData || []).map(n => norm(n, 'notice', 'ntc-', textDuration*4)).sort((a,b)=>{
+                if(!a.created_at && !b.created_at) return 0;
+                if(!a.created_at) return 1; if(!b.created_at) return -1;
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+
+            const evts = (eventsData || []).map(e => norm(e, 'event', 'evt-', textDuration*3)).sort((a,b)=>{
+                if(!a.created_at && !b.created_at) return 0;
+                if(!a.created_at) return 1; if(!b.created_at) return -1;
+                return new Date(a.created_at) - new Date(b.created_at);
+            });
+
+            // Category order: Images -> Videos -> Notices -> Events
+            allContent = [].concat(imgs, vids, ntcs, evts);
+
             // If no content, show message
             if (allContent.length === 0) {
                 allContent.push({
@@ -478,8 +467,8 @@
                     duration: 5
                 });
             }
-            
-            console.log('Total content items:', allContent.length);
+
+            console.log('Total content items (ordered):', allContent.length);
             document.getElementById('totalItems').textContent = allContent.length;
         }
         
@@ -671,14 +660,48 @@
             console.log('Connected to server');
         });
         
+        // Reload content atomically without a full page reload when possible
+        async function reloadContent() {
+            try {
+                const resp = await fetch(window.location.href, { cache: 'no-store' });
+                const text = await resp.text();
+
+                function extractArr(name) {
+                    const re = new RegExp('(?:const|let)\\s+' + name + '\\s*=\\s*(\\[.*?\\]);', 's');
+                    const m = text.match(re);
+                    if (m && m[1]) return JSON.parse(m[1]);
+                    return null;
+                }
+
+                const newImages = extractArr('imagesData');
+                const newVideos = extractArr('videosData');
+                const newEvents = extractArr('eventsData');
+                const newNotices = extractArr('noticesData');
+
+                if (newImages) imagesData = newImages;
+                if (newVideos) videosData = newVideos;
+                if (newEvents) eventsData = newEvents;
+                if (newNotices) noticesData = newNotices;
+
+                // Rebuild queue and DOM atomically
+                prepareContent();
+                initCarousel();
+                // restart timer cleanly
+                startTimer();
+            } catch (err) {
+                console.error('reloadContent error, falling back to full reload', err);
+                location.reload();
+            }
+        }
+
         socket.on('content_updated', (data) => {
             console.log('Content updated:', data);
-            location.reload();
+            reloadContent();
         });
-        
+
         socket.on('tv_refresh', (data) => {
             console.log('TV refresh requested');
-            location.reload();
+            reloadContent();
         });
         
         // Handle visibility change to pause/resume carousel
